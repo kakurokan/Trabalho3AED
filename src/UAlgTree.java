@@ -1,3 +1,3 @@
 public class UAlgTree {
-    int i;
+    int i = 0;
 }
