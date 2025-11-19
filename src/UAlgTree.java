@@ -1,7 +1,6 @@
 //this is defined as an outer class because that way we can save 8 bytes for each node.
 //and we don't really need a pointer to the UAlgTree Object anyway
-class UAlgTreeNode<Key extends Comparable<Key>,Value> implements IUAlgTreeNode<Key, Value>
-{
+class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<Key, Value> {
     @Override
     public IUAlgTreeNode<Key, Value> getLeft() {
         //TODO: implement
@@ -39,63 +38,52 @@ class UAlgTreeNode<Key extends Comparable<Key>,Value> implements IUAlgTreeNode<K
     }
 }
 
-public class UAlgTree<Key extends Comparable<Key>,Value> {
+public class UAlgTree<Key extends Comparable<Key>, Value> {
 
     //TODO: implement
 
-    public UAlgTree()
-    {
+    public UAlgTree() {
         //TODO: implement
     }
 
-    public IUAlgTreeNode<Key,Value> getRoot()
-    {
+    public IUAlgTreeNode<Key, Value> getRoot() {
         //TODO: implement
         return null;
     }
 
-    public int size()
-    {
-        //TODO: implement
-        return 0;
+    public int size() {
+        return getRoot().getSize();
     }
 
-    public Value get(Key k)
-    {
+    public Value get(Key k) {
         //TODO: implement
         return null;
     }
-    
-    public boolean contains(Key k)
-    {
+
+    public boolean contains(Key k) {
         //TODO: implement
         return false;
     }
 
-    public void put(Key k, Value v)
-    {
+    public void put(Key k, Value v) {
         //TODO: implement
     }
 
-    public void delete(Key k)
-    {
+    public void delete(Key k) {
         //TODO: implement
     }
 
-    public Iterable<Key> keys()
-    {
+    public Iterable<Key> keys() {
         //TODO: implement
-    	return null;
+        return null;
     }
 
-    public Iterable<Value> values()
-    {
+    public Iterable<Value> values() {
         //TODO: implement
-    	return null;
+        return null;
     }
 
-    public UAlgTree<Key,Value> shallowCopy()
-    {
+    public UAlgTree<Key, Value> shallowCopy() {
         //TODO: implement
         return null;
     }
