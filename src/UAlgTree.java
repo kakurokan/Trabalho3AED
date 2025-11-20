@@ -1,22 +1,31 @@
 //this is defined as an outer class because that way we can save 8 bytes for each node.
 //and we don't really need a pointer to the UAlgTree Object anyway
 class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<Key, Value> {
+    Key key;
+    Value value;
+    int size;
+    UAlgTreeNode<Key, Value> left;
+    UAlgTreeNode<Key, Value> right;
+
+    public UAlgTreeNode(int size, Value value, Key key) {
+        this.size = size;
+        this.value = value;
+        this.key = key;
+    }
+
     @Override
     public IUAlgTreeNode<Key, Value> getLeft() {
-        //TODO: implement
-        return null;
+        return left;
     }
 
     @Override
     public IUAlgTreeNode<Key, Value> getRight() {
-        //TODO: implement
-        return null;
+        return right;
     }
 
     @Override
     public int getSize() {
-        //TODO: implement
-        return 0;
+        return size;
     }
 
     @Override
@@ -27,28 +36,25 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
 
     @Override
     public Key getKey() {
-        //TODO: implement
-        return null;
+        return key;
     }
 
     @Override
     public Value getValue() {
-        //TODO: implement
-        return null;
+        return value;
     }
 }
 
 public class UAlgTree<Key extends Comparable<Key>, Value> {
 
-    //TODO: implement
+    private UAlgTreeNode<Key, Value> root;
 
     public UAlgTree() {
         //TODO: implement
     }
 
     public IUAlgTreeNode<Key, Value> getRoot() {
-        //TODO: implement
-        return null;
+        return root;
     }
 
     public int size() {
@@ -86,5 +92,16 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     public UAlgTree<Key, Value> shallowCopy() {
         //TODO: implement
         return null;
+    }
+
+    private void printInorder(IUAlgTreeNode<Key, Value> n) {
+        if (n == null)
+            return;
+
+        printInorder(n.getLeft());
+
+        System.out.println(n.getValue());
+
+        printInorder(n.getRight());
     }
 }
