@@ -1,5 +1,10 @@
 //this is defined as an outer class because that way we can save 8 bytes for each node.
 //and we don't really need a pointer to the UAlgTree Object anyway
+
+//W(n) = nº de ponteiros "null" existentes na sub-árvore que começa em "n"
+//w(null) = 1
+//w(n) = w(left(n)) + w(right(n))
+
 class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<Key, Value> {
     Key key;
     Value value;
