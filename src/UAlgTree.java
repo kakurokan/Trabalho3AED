@@ -38,7 +38,7 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
         int weightLeft = (left == null) ? 1 : left.getWeight();
         int weightRight = (right == null) ? 1 : right.getWeight();
 
-        return weightRight + weightRight;
+        return weightLeft + weightRight;
     }
 
     public boolean isBalanced() {
@@ -128,6 +128,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         if (!node.isBalanced()) {
             //TODO//
         }
+
         return node;
     }
 
