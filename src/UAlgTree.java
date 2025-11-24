@@ -35,23 +35,23 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
 
     @Override
     public int getWeight() {
-        int weightleft = (left == null) ? 1 : left.getWeight();
+        int weightLeft = (left == null) ? 1 : left.getWeight();
+        int weightRight = (right == null) ? 1 : right.getWeight();
 
-        int weightright = (right == null) ? 1 : right.getWeight();
-
-        return weightleft + weightright;
+        return weightRight + weightRight;
     }
 
     public boolean isBalanced() {
-        int weightleft = (left == null) ? 1 : left.getWeight();
-        int weightright = (right == null) ? 1 : right.getWeight();
+        int weightLeft = (left == null) ? 1 : left.getWeight();
+        int weightRight = (right == null) ? 1 : right.getWeight();
 
-        if (weightleft < 0.4 * weightright || weightright < 0.4 * weightleft) {
+        if (weightLeft >= 0.4 * weightRight && weightRight >= 0.4 * weightLeft) {
             return false;
         }
-        boolean leftbalanced = (left == null) || left.isBalanced();
-        boolean rightbalanced = (right == null) || right.isBalanced();
-        return leftbalanced && rightbalanced;
+
+        boolean leftBalanced = (left == null) || left.isBalanced();
+        boolean rightBalanced = (right == null) || right.isBalanced();
+        return leftBalanced && rightBalanced;
     }
 
     @Override
@@ -85,20 +85,19 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         return (this.root == null) ? 0 : this.root.getSize();
     }
 
-    public int UalgTreeNodesize(UAlgTreeNode node) {
+    public int UalgTreeNodesize(UAlgTreeNode<Key, Value> node) {
         return (node == null) ? 0 : node.getSize();
     }
 
-    private UAlgTreeNode rank(Key k) {
-
-        UAlgTreeNode temp = root;
+    private UAlgTreeNode<Key, Value> rank(Key k) {
+        UAlgTreeNode<Key, Value> temp = root;
         if (temp == null) return null;
         while (true) {
-            int cmp = temp.key.compareTo(k);
-            if (cmp < 0) {
+            int cmp = k.compareTo(temp.getKey());
+            if (cmp > 0) {
                 if (temp.right == null) return temp;
                 temp = temp.right;
-            } else if (cmp > 0) {
+            } else if (cmp < 0) {
                 if (temp.left == null) return temp;
                 temp = temp.left;
             } else {
@@ -107,32 +106,30 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         }
     }
 
-
     public Value get(Key k) {
-        UAlgTreeNode temp = rank(k);
-        if (temp == null) return null;
-        return (temp.key.compareTo(k) == 0) ? (Value) temp.getValue() : null;
+        UAlgTreeNode<Key, Value> node = rank(k);
+        return (node == null || (k.compareTo(node.getKey()) != 0)) ? null : node.getValue();
     }
 
     public boolean contains(Key k) {
-        UAlgTreeNode temp = rank(k);
-        if (temp == null) return false;
-        return (temp.key.compareTo(k) == 0) ? true : false;
+        UAlgTreeNode<Key, Value> node = rank(k);
+        return node != null && (k.compareTo(node.getKey()) == 0);
+
     }
 
     public void put(Key k, Value v) {
-        this.root = put(this.root, k, v);
+        this.root = (UAlgTreeNode<Key, Value>) put(this.root, k, v);
     }
 
-    public UAlgTreeNode put(UAlgTreeNode node, Key k, Value v) {
-        if (node == null) return new UAlgTreeNode(1, v, k);
+    private IUAlgTreeNode<Key, Value> put(UAlgTreeNode<Key, Value> node, Key k, Value v) {
+        if (node == null) return new UAlgTreeNode<Key, Value>(1, v, k);
 
         int cmp = node.getKey().compareTo(k);
         if (cmp < 0) node.right = put(node.right, k, v);
         else if (cmp > 0) node.left = put(node.left, k, v);
         else node.value = v;
         node.size = UalgTreeNodesize(node.left) + 1 + UalgTreeNodesize(node.right);
-        if (!node.isBalanced()){
+        if (!node.isBalanced()) {
             //TODO//
         }
         return node;
