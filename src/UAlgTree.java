@@ -45,13 +45,7 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
         int weightLeft = (left == null) ? 1 : left.getWeight();
         int weightRight = (right == null) ? 1 : right.getWeight();
 
-        if (weightLeft >= 0.4 * weightRight && weightRight >= 0.4 * weightLeft) {
-            return false;
-        }
-
-        boolean leftBalanced = (left == null) || left.isBalanced();
-        boolean rightBalanced = (right == null) || right.isBalanced();
-        return leftBalanced && rightBalanced;
+        return !(weightLeft >= 0.4 * weightRight) || !(weightRight >= 0.4 * weightLeft);
     }
 
     @Override
@@ -85,7 +79,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         return (this.root == null) ? 0 : this.root.getSize();
     }
 
-    public int UalgTreeNodesize(UAlgTreeNode<Key, Value> node) {
+    private int UAlgTreeNodesize(UAlgTreeNode<Key, Value> node) {
         return (node == null) ? 0 : node.getSize();
     }
 
@@ -118,17 +112,19 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     }
 
     public void put(Key k, Value v) {
-        this.root = (UAlgTreeNode<Key, Value>) put(this.root, k, v);
+        this.root = put(this.root, k, v);
     }
 
-    private IUAlgTreeNode<Key, Value> put(UAlgTreeNode<Key, Value> node, Key k, Value v) {
+    private UAlgTreeNode<Key, Value> put(UAlgTreeNode<Key, Value> node, Key k, Value v) {
         if (node == null) return new UAlgTreeNode<Key, Value>(1, v, k);
 
-        int cmp = node.getKey().compareTo(k);
-        if (cmp < 0) node.right = put(node.right, k, v);
-        else if (cmp > 0) node.left = put(node.left, k, v);
+        int cmp = k.compareTo(node.getKey());
+        if (cmp > 0) node.right = put(node.right, k, v);
+        else if (cmp < 0) node.left = put(node.left, k, v);
         else node.value = v;
-        node.size = UalgTreeNodesize(node.left) + 1 + UalgTreeNodesize(node.right);
+
+        node.size = UAlgTreeNodesize(node.left) + UAlgTreeNodesize(node.right) + 1;
+
         if (!node.isBalanced()) {
             //TODO//
         }
