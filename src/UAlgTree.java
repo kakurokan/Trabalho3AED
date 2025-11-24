@@ -45,7 +45,7 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
         int weightLeft = (left == null) ? 1 : left.getWeight();
         int weightRight = (right == null) ? 1 : right.getWeight();
 
-        return !(weightLeft >= 0.4 * weightRight) || !(weightRight >= 0.4 * weightLeft);
+        return (weightLeft >= 0.4 * weightRight) && (weightRight >= 0.4 * weightLeft);
     }
 
     @Override
@@ -111,6 +111,17 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
     }
 
+    private void fixWeights(UAlgTreeNode<Key, Value> node) {
+        int weightLeft = (node.left == null) ? 1 : node.left.getWeight();
+        int weightRight = (node.right == null) ? 1 : node.right.getWeight();
+
+        if (weightLeft < 0.4 * weightRight) {
+
+        } else if (weightRight < 0.4 * weightLeft) {
+
+        }
+    }
+
     public void put(Key k, Value v) {
         this.root = put(this.root, k, v);
     }
@@ -126,7 +137,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         node.size = UAlgTreeNodesize(node.left) + UAlgTreeNodesize(node.right) + 1;
 
         if (!node.isBalanced()) {
-            //TODO//
+            fixWeights(node);
         }
 
         return node;
