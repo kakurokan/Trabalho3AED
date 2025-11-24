@@ -131,6 +131,24 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         return node;
     }
 
+    private UAlgTreeNode<Key, Value> rotateLeft(UAlgTreeNode<Key, Value> node) {
+        UAlgTreeNode<Key, Value> right = node.right;
+
+        node.right = right.left;
+        right.left = node;
+
+        return right;
+    }
+
+    private UAlgTreeNode<Key, Value> rotateRight(UAlgTreeNode<Key, Value> node) {
+        UAlgTreeNode<Key, Value> left = node.left;
+
+        node.left = left.right;
+        left.right = node;
+
+        return left;
+    }
+
     public void delete(Key k) {
         //TODO: implement
     }
