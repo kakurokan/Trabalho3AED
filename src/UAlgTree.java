@@ -128,8 +128,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
             if (weightKidLeft > 1.5 * weightKidRight) {
                 node.right = rotateRight(node.right);
-                node.right.size = updateUAlgTreeNodeSize(node.right);
-                node.right.weight = updateUAlgTreeNodeWeight(node.right);
             }
 
             node = rotateLeft(node);
@@ -141,15 +139,11 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
             if (weightKidRight > 1.5 * weightKidLeft) {
                 node.left = rotateLeft(node.left);
-                node.left.size = updateUAlgTreeNodeSize(node.left);
-                node.left.weight = updateUAlgTreeNodeWeight(node.left);
             }
 
             node = rotateRight(node);
         }
 
-        node.weight = updateUAlgTreeNodeWeight(node);
-        node.size = updateUAlgTreeNodeSize(node);
         return node;
     }
 
@@ -178,6 +172,12 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         node.right = right.left;
         right.left = node;
 
+        node.weight = updateUAlgTreeNodeWeight(node);
+        node.size = updateUAlgTreeNodeSize(node);
+
+        right.weight = updateUAlgTreeNodeWeight(right);
+        right.size = updateUAlgTreeNodeSize(right);
+
         return right;
     }
 
@@ -186,6 +186,12 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
         node.left = left.right;
         left.right = node;
+
+        node.weight = updateUAlgTreeNodeWeight(node);
+        node.size = updateUAlgTreeNodeSize(node);
+
+        left.weight = updateUAlgTreeNodeWeight(left);
+        left.size = updateUAlgTreeNodeSize(left);
 
         return left;
     }
