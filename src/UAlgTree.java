@@ -5,6 +5,9 @@
 //w(null) = 1
 //w(n) = w(left(n)) + w(right(n))
 
+import java.util.Iterator;
+import java.util.Stack;
+
 class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<Key, Value> {
     private static final int INITIAL_WEIGHT = 2;
     Key key;
@@ -52,7 +55,7 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
     }
 }
 
-public class UAlgTree<Key extends Comparable<Key>, Value> {
+public class UAlgTree<Key extends Comparable<Key>, Value> implements Iterable<Key> {
 
     private UAlgTreeNode<Key, Value> root;
 
@@ -63,6 +66,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     public UAlgTree(Key key, Value value) {
         this.root = new UAlgTreeNode<>(1, value, key);
     }
+
 
     public IUAlgTreeNode<Key, Value> getRoot() {
         return root;
@@ -106,14 +110,30 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     }
 
     public Value get(Key k) {
-        UAlgTreeNode<Key, Value> node = rank(k);
-        return (node == null || (k.compareTo(node.getKey()) != 0)) ? null : node.getValue();
+        UAlgTreeNode<Key, Value> node = this.root;
+        if (node == null) return null;
+        Stack<UAlgTreeNode<Key, Value>> nodes = new Stack<>();
+        nodes.push(node);
+
+        while (true) {
+            int cmp = k.compareTo(node.getKey());
+            if (cmp > 0) {
+                node = node.right;
+            } else if (cmp < 0) {
+                node = node.left;
+            } else {
+                break;
+            }
+            nodes.push(node);
+        }
+
+
+        return node.value;
     }
 
     public boolean contains(Key k) {
         UAlgTreeNode<Key, Value> node = rank(k);
         return node != null && (k.compareTo(node.getKey()) == 0);
-
     }
 
     private UAlgTreeNode<Key, Value> fixWeights(UAlgTreeNode<Key, Value> node) {
@@ -235,29 +255,48 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         return fixWeights(node);
     }
 
-    public Iterable<Key> keys() {
-        //TODO: implement
-        return null;
+
+    public Iterator<Key> iterator() {
+        return new KeyIterator(this.root);
     }
+
 
     public Iterable<Value> values() {
         //TODO: implement
         return null;
     }
 
+
     public UAlgTree<Key, Value> shallowCopy() {
         //TODO: implement
         return null;
     }
 
-    private void printInorder(IUAlgTreeNode<Key, Value> n) {
-        if (n == null)
-            return;
+    public class KeyIterator implements Iterator<Key> {
+        private Stack<UAlgTreeNode<Key, Value>> stack = new Stack<>();
 
-        printInorder(n.getLeft());
+        public KeyIterator(UAlgTreeNode<Key, Value> start) {
+            pushLeft(start);
+        }
 
-        System.out.println(n.getValue());
+        public boolean hasNext() {
+            return (!stack.isEmpty());
+        }
 
-        printInorder(n.getRight());
+        private void pushLeft(UAlgTreeNode<Key, Value> node) {
+            while (node != null) {
+                stack.push(node);
+                node = node.left;
+            }
+        }
+
+        @Override
+        public Key next() {
+            UAlgTreeNode<Key, Value> node = stack.pop();
+            if (node.right != null) {
+                pushLeft(node.right);
+            }
+            return node.getKey();
+        }
     }
 }
