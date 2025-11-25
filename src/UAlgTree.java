@@ -133,31 +133,67 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         UAlgTreeNode<Key, Value> node = this.root;
         if (node == null) return null;
 
-        Value value = 0;
+        Value value;
         Stack<UAlgTreeNode<Key, Value>> nodes = new Stack<>();
         nodes.push(node);
 
         while (true) {
             int cmp = k.compareTo(node.getKey());
             if (cmp > 0) {
-                if (node.right == null) return null;
                 node = node.right;
             } else if (cmp < 0) {
-                if (node.left == null) return null;
                 node = node.left;
             } else {
                 break;
             }
+            if (node == null) return null;
             nodes.push(node);
         }
-        value = node.getValue();
-        boolean wasRotated = false;
-        while (!nodes.isEmpty()) {
-            node = nodes.pop();
 
+        nodes.pop(); // retira o nó encontrado
+        value = node.getValue();
+
+        boolean wasRotated = false;
+        UAlgTreeNode<Key, Value> parent = null;
+        while (!nodes.isEmpty()) {
+            parent = nodes.pop();
+            boolean isRoot = parent == this.root;
+
+            if (parent.left == node && isSafeRightRotation(parent)) {
+                parent = rotateRight(parent);
+                wasRotated = true;
+            } else if (parent.right == node && isSafeLeftRotation((parent))) {
+                parent = rotateLeft(parent);
+                wasRotated = true;
+            } else if (isRoot && !wasRotated) {
+                if (parent.right == node)
+                    parent = rotateLeft(parent);
+                else
+                    parent = rotateRight(parent);
+            }
+
+            node = parent;
+        }
+        //TODO//
+        if (parent == this.root) {
+            if (!wasRotated) {
+                if (parent.left == node)
+                    parent = rotateRight(parent);
+                else if (parent.right == node)
+                    parent = rotateLeft(parent);
+            }
+            this.root = parent;
+        } else if (wasRotated) {
+            UAlgTreeNode<Key, Value> grandParent = nodes.pop();
+
+            int cmp = parent.getKey().compareTo(grandParent.getKey());
+            if (cmp > 0)
+                grandParent.right = parent;
+            else
+                grandParent.left = parent;
         }
 
-        return node.value;
+        return value;
     }
 
     public boolean contains(Key k) {
