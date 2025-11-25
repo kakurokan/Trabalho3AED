@@ -6,9 +6,11 @@
 //w(n) = w(left(n)) + w(right(n))
 
 class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<Key, Value> {
+    private static final int INITIAL_WEIGHT = 2;
     Key key;
     Value value;
     int size;
+    int weight;
     UAlgTreeNode<Key, Value> left;
     UAlgTreeNode<Key, Value> right;
 
@@ -16,6 +18,7 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
         this.size = size;
         this.value = value;
         this.key = key;
+        this.weight = INITIAL_WEIGHT;
     }
 
     @Override
@@ -35,10 +38,7 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
 
     @Override
     public int getWeight() {
-        int weightLeft = (left == null) ? 1 : left.getWeight();
-        int weightRight = (right == null) ? 1 : right.getWeight();
-
-        return weightLeft + weightRight;
+        return weight;
     }
 
     @Override
@@ -84,6 +84,10 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         return UAlgTreeNodeSize(node.left) + UAlgTreeNodeSize(node.right) + 1;
     }
 
+    private int updateUAlgTreeNodeWeight(UAlgTreeNode<Key, Value> node) {
+        return UAlgTreeNodeWeight(node.left) + UAlgTreeNodeWeight(node.right);
+    }
+
     private UAlgTreeNode<Key, Value> rank(Key k) {
         UAlgTreeNode<Key, Value> temp = root;
         if (temp == null) return null;
@@ -125,6 +129,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             if (weightKidLeft > 1.5 * weightKidRight) {
                 node.right = rotateRight(node.right);
                 node.right.size = updateUAlgTreeNodeSize(node.right);
+                node.right.weight = updateUAlgTreeNodeWeight(node.right);
             }
 
             node = rotateLeft(node);
@@ -137,11 +142,13 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             if (weightKidRight > 1.5 * weightKidLeft) {
                 node.left = rotateLeft(node.left);
                 node.left.size = updateUAlgTreeNodeSize(node.left);
+                node.left.weight = updateUAlgTreeNodeWeight(node.left);
             }
 
             node = rotateRight(node);
         }
 
+        node.weight = updateUAlgTreeNodeWeight(node);
         node.size = updateUAlgTreeNodeSize(node);
         return node;
     }
@@ -160,6 +167,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         else node.value = v;
 
         node.size = updateUAlgTreeNodeSize(node);
+        node.weight = updateUAlgTreeNodeWeight(node);
 
         return fixWeights(node);
     }
@@ -182,8 +190,43 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         return left;
     }
 
+    private UAlgTreeNode<Key, Value> getSucessor(UAlgTreeNode<Key, Value> node) {
+        UAlgTreeNode<Key, Value> suc = node.right;
+        while (suc != null && suc.left != null) {
+            suc = suc.left;
+        }
+        return suc;
+    }
+
     public void delete(Key k) {
-        //TODO: implement
+        this.root = delete(this.root, k);
+    }
+
+    private UAlgTreeNode<Key, Value> delete(UAlgTreeNode<Key, Value> node, Key k) {
+        if (node == null) return null;
+
+        int cmp = k.compareTo(node.getKey());
+        if (cmp > 0) {
+            node.right = delete(node.right, k);
+        } else if (cmp < 0) {
+            node.left = delete(node.left, k);
+        } else {
+            //0/1 filho
+            if (node.left == null) return node.right;
+            if (node.right == null) return node.left;
+
+            //2 filhos
+            UAlgTreeNode<Key, Value> suc = getSucessor(node);
+            node.key = suc.key;
+            suc.key = k;
+            node.value = suc.value;
+
+            node.right = delete(node.right, k);
+        }
+
+        node.size = updateUAlgTreeNodeSize(node);
+        node.weight = updateUAlgTreeNodeWeight(node);
+        return fixWeights(node);
     }
 
     public Iterable<Key> keys() {
