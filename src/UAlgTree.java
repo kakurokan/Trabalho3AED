@@ -109,11 +109,12 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         int weightRight = (node.right == null) ? 1 : node.right.getWeight();
 
         if (weightLeft < 0.4 * weightRight) {
-            
+
         } else if (weightRight < 0.4 * weightLeft) {
 
         }
     }
+
 
     public void put(Key k, Value v) {
         this.root = put(this.root, k, v);
