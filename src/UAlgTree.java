@@ -302,21 +302,11 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     }
 
     public Iterable<Key> keys() {
-        return new Iterable<Key>() {
-            @Override
-            public Iterator<Key> iterator() {
-                return new KeyIterator();
-            }
-        };
+        return KeyIterator::new;
     }
 
     public Iterable<Value> values() {
-        return new Iterable<Value>() {
-            @Override
-            public Iterator<Value> iterator() {
-                return new ValueIterator();
-            }
-        };
+        return ValueIterator::new;
     }
 
     public UAlgTree<Key, Value> shallowCopy() {
