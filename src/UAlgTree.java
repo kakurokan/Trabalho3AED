@@ -179,8 +179,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     }
 
     public boolean contains(Key k) {
-        UAlgTreeNode<Key, Value> node = rank(k);
-        return node != null && (k.compareTo(node.getKey()) == 0);
+        return get(k) != null;
     }
 
     private UAlgTreeNode<Key, Value> fixWeights(UAlgTreeNode<Key, Value> node) {
