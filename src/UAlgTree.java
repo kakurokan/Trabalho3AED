@@ -138,7 +138,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         value = node.getValue();
 
         boolean wasRotated = false;
-        UAlgTreeNode<Key, Value> parent = null;
+        UAlgTreeNode<Key, Value> parent;
         while (!nodes.isEmpty()) {
             parent = nodes.pop();
             boolean isRoot = parent == this.root;
@@ -219,7 +219,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     }
 
     private UAlgTreeNode<Key, Value> put(UAlgTreeNode<Key, Value> node, Key k, Value v) {
-        if (node == null) return new UAlgTreeNode<Key, Value>(1, v, k);
+        if (node == null) return new UAlgTreeNode<>(1, v, k);
 
         int cmp = k.compareTo(node.getKey());
         if (cmp > 0) node.right = put(node.right, k, v);
