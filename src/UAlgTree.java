@@ -328,10 +328,10 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         private final Stack<UAlgTreeNode<Key, Value>> stack = new Stack<>();
 
         public ValueIterator() {
-            PushLeft((UAlgTreeNode<Key, Value>) getRoot());
+            pushLeft((UAlgTreeNode<Key, Value>) getRoot());
         }
 
-        private void PushLeft(UAlgTreeNode<Key, Value> node) {
+        private void pushLeft(UAlgTreeNode<Key, Value> node) {
             while (node != null) {
                 stack.push(node);
                 node = node.left;
@@ -345,7 +345,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         public Value next() {
             UAlgTreeNode<Key, Value> node = stack.pop();
             if (node.right != null) {
-                PushLeft(node.right);
+                pushLeft(node.right);
             }
             return node.getValue();
 
@@ -356,14 +356,14 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         private final Stack<UAlgTreeNode<Key, Value>> stack = new Stack<>();
 
         public KeyIterator() {
-            PushLeft((UAlgTreeNode<Key, Value>) getRoot());
+            pushLeft((UAlgTreeNode<Key, Value>) getRoot());
         }
 
         public boolean hasNext() {
             return (!stack.isEmpty());
         }
 
-        private void PushLeft(UAlgTreeNode<Key, Value> node) {
+        private void pushLeft(UAlgTreeNode<Key, Value> node) {
             while (node != null) {
                 stack.push(node);
                 node = node.left;
@@ -374,7 +374,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         public Key next() {
             UAlgTreeNode<Key, Value> node = stack.pop();
             if (node.right != null) {
-                PushLeft(node.right);
+                pushLeft(node.right);
             }
             return node.getKey();
         }
