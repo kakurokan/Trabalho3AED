@@ -154,29 +154,23 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
                 else
                     this.root = rotateRight(this.root);
             } else if (wasRotated) {
+                if (!isRoot) {
+                    UAlgTreeNode<Key, Value> grandParent = nodes.pop();
 
+                    int cmp = parent.getKey().compareTo(grandParent.getKey());
+                    if (cmp > 0)
+                        grandParent.right = parent;
+                    else
+                        grandParent.left = parent;
+                } else {
+                    this.root = parent;
+                }
+
+                break;
             }
 
             node = parent;
         }
-        if (parent == this.root) {
-            if (!wasRotated) {
-                if (parent.left == node)
-                    parent = rotateRight(parent);
-                else if (parent.right == node)
-                    parent = rotateLeft(parent);
-            }
-            this.root = parent;
-        } else if (wasRotated) {
-            UAlgTreeNode<Key, Value> grandParent = nodes.pop();
-
-            int cmp = parent.getKey().compareTo(grandParent.getKey());
-            if (cmp > 0)
-                grandParent.right = parent;
-            else
-                grandParent.left = parent;
-        }
-
         return value;
     }
 
