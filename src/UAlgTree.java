@@ -119,9 +119,10 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         Value value;
         Stack<UAlgTreeNode<Key, Value>> nodes = new Stack<>();
         nodes.push(node);
+        int cmp;
 
         while (true) {
-            int cmp = k.compareTo(node.getKey());
+            cmp = k.compareTo(node.getKey());
             if (cmp > 0) {
                 node = node.right;
             } else if (cmp < 0) {
@@ -142,22 +143,25 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             parent = nodes.pop();
             boolean isRoot = parent == this.root;
 
-            if (parent.left == node && isSafeRightRotation(parent)) {
-                parent = rotateRight(parent);
-                wasRotated = true;
-            } else if (parent.right == node && isSafeLeftRotation((parent))) {
-                parent = rotateLeft(parent);
-                wasRotated = true;
-            } else if (isRoot && !wasRotated) {
-                if (this.root.right == node)
-                    this.root = rotateLeft(this.root);
-                else
-                    this.root = rotateRight(this.root);
-            } else if (wasRotated) {
+            cmp = node.getKey().compareTo(parent.getKey());
+
+            if (cmp > 0) {
+                if (isRoot || isSafeLeftRotation(parent)) {
+                    parent = rotateLeft(parent);
+                    wasRotated = true;
+                }
+            } else if (cmp < 0) {
+                if (isRoot || isSafeRightRotation(parent)) {
+                    parent = rotateRight(parent);
+                    wasRotated = true;
+                }
+            }
+
+            if (wasRotated) {
                 if (!isRoot) {
                     UAlgTreeNode<Key, Value> grandParent = nodes.pop();
 
-                    int cmp = parent.getKey().compareTo(grandParent.getKey());
+                    cmp = parent.getKey().compareTo(grandParent.getKey());
                     if (cmp > 0)
                         grandParent.right = parent;
                     else
