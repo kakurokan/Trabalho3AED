@@ -92,23 +92,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         return UAlgTreeNodeWeight(node.left) + UAlgTreeNodeWeight(node.right);
     }
 
-    private UAlgTreeNode<Key, Value> rank(Key k) {
-        UAlgTreeNode<Key, Value> temp = root;
-        if (temp == null) return null;
-        while (true) {
-            int cmp = k.compareTo(temp.getKey());
-            if (cmp > 0) {
-                if (temp.right == null) return temp;
-                temp = temp.right;
-            } else if (cmp < 0) {
-                if (temp.left == null) return temp;
-                temp = temp.left;
-            } else {
-                return temp;
-            }
-        }
-    }
-
     private boolean isSafeLeftRotation(UAlgTreeNode<Key, Value> node) {
         if (node.right == null) return false;
 
@@ -166,15 +149,16 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
                 parent = rotateLeft(parent);
                 wasRotated = true;
             } else if (isRoot && !wasRotated) {
-                if (parent.right == node)
-                    parent = rotateLeft(parent);
+                if (this.root.right == node)
+                    this.root = rotateLeft(this.root);
                 else
-                    parent = rotateRight(parent);
+                    this.root = rotateRight(this.root);
+            } else if (wasRotated) {
+
             }
 
             node = parent;
         }
-        //TODO//
         if (parent == this.root) {
             if (!wasRotated) {
                 if (parent.left == node)
