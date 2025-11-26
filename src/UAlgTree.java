@@ -310,8 +310,21 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     }
 
     public UAlgTree<Key, Value> shallowCopy() {
-        //TODO: implement
-        return null;
+        UAlgTree<Key, Value> copy = new UAlgTree<>();
+        copy.root = shallowCopyNode(this.root);
+        return copy;
+    }
+
+    private UAlgTreeNode<Key, Value> shallowCopyNode(UAlgTreeNode<Key, Value> node) {
+        if (node == null) return null;
+
+        UAlgTreeNode<Key, Value> copy = new UAlgTreeNode<>(node.getSize(), node.getValue(), node.getKey());
+        copy.weight = node.weight;
+
+        copy.left = shallowCopyNode(node.left);
+        copy.right = shallowCopyNode(node.right);
+
+        return copy;
     }
 
     public class ValueIterator implements Iterator<Value> {
