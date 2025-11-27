@@ -68,15 +68,15 @@ public class UAlshTable<Key, Value> {
     private UAlshBucket<Key, Value>[] t3;
     private UAlshBucket<Key, Value>[] t4;
     private UAlshBucket<Key, Value>[] t5;
-
+    
+    @SuppressWarnings("unchecked")
     public UAlshTable(Function<Key, Integer> hc2) {
         this.hc2 = hc2;
         this.size = 0;
         this.primeIndex = 4;
         this.deletedKeys = 0;
 
-        @SuppressWarnings("unchecked")
-                t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[0]];
+        t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[0]];
         t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[1]];
         t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[2]];
         t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[3]];
