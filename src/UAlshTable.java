@@ -5,6 +5,19 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
     //as funções públicas da interface. Mas podem também adicionar outros
     //campos e métodos (incluindo o construtor), caso o entendam.
 
+    Key key;
+    Value value;
+    int maxSharedTable;
+
+    public UAlshBucket(Value value, Key key) {
+        this.value = value;
+        this.key = key;
+    }
+
+    public int getMaxSharedTable() {
+        return maxSharedTable;
+    }
+
     @Override
     public Key getKey() {
         //TODO: implement
@@ -42,9 +55,12 @@ public class UAlshTable<Key, Value> {
             11229331, 22458671, 44917381, 89834777, 179669557
     };
 
+    private int primeIndex;
+    private Function<Key, Integer> hc2;
 
     public UAlshTable(Function<Key, Integer> hc2) {
-        //TODO: implement
+        this.primeIndex = 0;
+        this.hc2 = hc2;
     }
 
     public int size() {
