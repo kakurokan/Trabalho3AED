@@ -8,10 +8,12 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
     Key key;
     Value value;
     int maxSharedTable;
+    private boolean is_deleted;
 
     public UAlshBucket(Value value, Key key) {
         this.value = value;
         this.key = key;
+        is_deleted = false;
     }
 
     public int getMaxSharedTable() {
@@ -20,26 +22,22 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
 
     @Override
     public Key getKey() {
-        //TODO: implement
-        return null;
+        return key;
     }
 
     @Override
     public Value getValue() {
-        //TODO: implement
-        return null;
+        return value;
     }
 
     @Override
     public boolean isEmpty() {
-        //TODO: implement
-        return false;
+        return key == null;
     }
 
     @Override
     public boolean isDeleted() {
-        //TODO: implement
-        return false;
+        return is_deleted;
     }
 }
 
@@ -55,12 +53,28 @@ public class UAlshTable<Key, Value> {
             11229331, 22458671, 44917381, 89834777, 179669557
     };
 
-    private int primeIndex;
     private Function<Key, Integer> hc2;
+    private int size;
+
+    //Tabelas
+    private UAlshBucket<Key, Value>[] t1;
+    private UAlshBucket<Key, Value>[] t2;
+    private UAlshBucket<Key, Value>[] t3;
+    private UAlshBucket<Key, Value>[] t4;
+    private UAlshBucket<Key, Value>[] t5;
 
     public UAlshTable(Function<Key, Integer> hc2) {
-        this.primeIndex = 0;
+
         this.hc2 = hc2;
+
+        @SuppressWarnings("unchecked")
+
+                t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[0]];
+        t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[1]];
+        t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[2]];
+        t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[3]];
+        t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[4]];
+
     }
 
     public int size() {
