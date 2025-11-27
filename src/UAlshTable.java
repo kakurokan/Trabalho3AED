@@ -8,12 +8,16 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
     Key key;
     Value value;
     int maxSharedTable;
+    int hc1;
+    int hc2;
     private boolean is_deleted;
 
-    public UAlshBucket(Value value, Key key) {
+    public UAlshBucket(Value value, Key key, Function<Key, Integer> hc2) {
         this.value = value;
         this.key = key;
         is_deleted = false;
+        this.hc1 = key.hashCode();
+        this.hc1 = hc2.apply(key);
     }
 
     public int getMaxSharedTable() {
@@ -55,6 +59,8 @@ public class UAlshTable<Key, Value> {
 
     private Function<Key, Integer> hc2;
     private int size;
+    private int primeIndex;
+    private int deletedKeys;
 
     //Tabelas
     private UAlshBucket<Key, Value>[] t1;
@@ -64,49 +70,58 @@ public class UAlshTable<Key, Value> {
     private UAlshBucket<Key, Value>[] t5;
 
     public UAlshTable(Function<Key, Integer> hc2) {
-
         this.hc2 = hc2;
+        this.size = 0;
+        this.primeIndex = 4;
+        this.deletedKeys = 0;
 
         @SuppressWarnings("unchecked")
-
                 t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[0]];
         t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[1]];
         t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[2]];
         t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[3]];
         t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[4]];
-
     }
 
     public int size() {
-        //TODO: implement
-        return 0;
+        return size;
+    }
+
+    private int UAsh(Key k, int i) {
+        return ((k.hashCode() + hc2.apply(k)) & 0x7fffffff) % getSubTable(i).length;
     }
 
     public int getMainCapacity() {
-        //TODO: implement
-        return 0;
+        return getSubTable(1).length;
     }
 
     public int getTotalCapacity() {
-        //TODO: implement
-        return 0;
+        int sum = 0;
+        for (int i = 1; i <= 5; i++)
+            sum += getSubTable(i).length;
+        return sum;
     }
 
     public float getLoadFactor() {
-        //TODO: implement
-        return 0;
+        return size / (float) getTotalCapacity();
     }
 
     public int getDeletedNotRemoved() {
-        //TODO: implement
-        return 0;
+        return deletedKeys;
     }
 
-    IUAlshBucket<Key, Value> getSubTable(int i) {
-        //dica: nesta função podem e devem retornar um array de UAlshBuckets.
-        //O Java vai verificar que isto é correcto, pois se um UAlshBucket é um
-        //IUAlshBucket, então um array de UAlshBuckets é um array de IUAlshBuckets.
-        //TODO: implement
+    public IUAlshBucket<Key, Value>[] getSubTable(int i) {
+        if (i == 1)
+            return t1;
+        else if (i == 2)
+            return t2;
+        else if (i == 3)
+            return t3;
+        else if (i == 4)
+            return t4;
+        else if (i == 5)
+            return t5;
+
         return null;
     }
 
@@ -116,7 +131,36 @@ public class UAlshTable<Key, Value> {
     }
 
     public Value get(Key k) {
-        //TODO: implement
+        int min = Integer.MAX_VALUE;
+        int khc1 = k.hashCode();
+        int khc2 = hc2.apply(k);
+
+        @SuppressWarnings("unchecked")
+        UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
+
+        for (int i = 1; i <= 5; i++) {
+            UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(k, i)];
+
+            if (bucket == null) {
+                min = 0;
+                break;
+            }
+
+            buckets[i - 1] = bucket;
+            min = Math.min(min, bucket.getMaxSharedTable());
+
+        }
+        for (int i = min - 1; i >= 0; i--) {
+            UAlshBucket<Key, Value> bucket = buckets[i];
+            if (bucket == null)
+                continue;
+
+            if (!bucket.isDeleted() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
+                if (bucket.getKey().equals(k))
+                    return bucket.getValue();
+            }
+        }
+
         return null;
     }
 
