@@ -57,6 +57,8 @@ public class UAlshTable<Key, Value> {
             11229331, 22458671, 44917381, 89834777, 179669557
     };
 
+    private final int DEFAULT_PRIME_INDEX = 4;
+
     private Function<Key, Integer> hc2;
     private int size;
     private int primeIndex;
@@ -68,7 +70,7 @@ public class UAlshTable<Key, Value> {
     private UAlshBucket<Key, Value>[] t3;
     private UAlshBucket<Key, Value>[] t4;
     private UAlshBucket<Key, Value>[] t5;
-    
+
     @SuppressWarnings("unchecked")
     public UAlshTable(Function<Key, Integer> hc2) {
         this.hc2 = hc2;
@@ -76,11 +78,18 @@ public class UAlshTable<Key, Value> {
         this.primeIndex = 4;
         this.deletedKeys = 0;
 
-        t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[0]];
-        t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[1]];
-        t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[2]];
-        t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[3]];
-        t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[4]];
+        this.t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX]];
+        this.t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 1]];
+        this.t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 2]];
+        this.t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 3]];
+        this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 4]];
+    }
+
+    private UAlshTable(Function<Key, Integer> hc2, int primeIndex) {
+        this.hc2 = hc2;
+        this.size = 0;
+        this.primeIndex = primeIndex;
+        this.deletedKeys = 0;
     }
 
     public int size() {
@@ -108,6 +117,31 @@ public class UAlshTable<Key, Value> {
 
     public int getDeletedNotRemoved() {
         return deletedKeys;
+    }
+
+    private void resize(int new_primeIndex) {
+        if (new_primeIndex < DEFAULT_PRIME_INDEX || new_primeIndex >= primes.length)
+            return;
+
+        UAlshTable<Key, Value> new_table = new UAlshTable<>(this.hc2, new_primeIndex);
+
+        for (int i = 1; i <= 5; i++) {
+            UAlshBucket<Key, Value>[] sub_table = (UAlshBucket<Key, Value>[]) getSubTable(i);
+            for (UAlshBucket<Key, Value> bucket : sub_table) {
+                if (bucket != null && !bucket.isDeleted()) {
+                    new_table.fastPut(bucket.getKey(), bucket.getValue());
+                }
+            }
+        }
+
+        this.t1 = new_table.t1;
+        this.t2 = new_table.t2;
+        this.t3 = new_table.t3;
+        this.t4 = new_table.t4;
+        this.t5 = new_table.t5;
+        this.deletedKeys = 0;
+        this.size = new_table.size;
+        this.primeIndex = new_primeIndex;
     }
 
     public IUAlshBucket<Key, Value>[] getSubTable(int i) {
