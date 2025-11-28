@@ -57,7 +57,6 @@ class UAlgTreeNode<Key extends Comparable<Key>, Value> implements IUAlgTreeNode<
 }
 
 public class UAlgTree<Key extends Comparable<Key>, Value> {
-
     private UAlgTreeNode<Key, Value> root;
 
     public UAlgTree() {
@@ -66,6 +65,83 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
     public UAlgTree(Key key, Value value) {
         this.root = new UAlgTreeNode<>(1, value, key);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("=== TESTE RIGOROSO DE SIZE (UAlgTree) ===");
+        UAlgTree<Integer, String> tree = new UAlgTree<>();
+
+        // 1. Inserção
+        System.out.println("\n[1] Inserindo 6 elementos...");
+        tree.put(50, "Raiz");
+        tree.put(20, "Esq");
+        tree.put(70, "Dir");
+        tree.put(10, "NetoEsq");
+        tree.put(30, "NetoDir");
+        tree.put(5, "Bisneto");
+
+        // CHECK 1: Tamanho inicial
+        int esperado = 6;
+        if (tree.size() == esperado) {
+            System.out.println("   [OK] Size inicial correto: " + tree.size());
+        } else {
+            System.out.println("   [ERRO] Size incorreto! Esperado: " + esperado + ", Obtido: " + tree.size());
+        }
+
+        // 2. Teste de Get (Rotação Simples)
+        System.out.println("\n[2] Get(30) - Rotação simples...");
+        tree.get(30);
+
+        // CHECK 2
+        if (tree.size() == esperado) {
+            System.out.println("   [OK] Size manteve-se após get(30).");
+        } else {
+            System.out.println("   [ERRO CRÍTICO] Size mudou para " + tree.size() + " após get(30)!");
+        }
+
+        // 3. Teste de Get Profundo (Rotação Múltipla)
+        // O nó 5 está no fundo. Trazê-lo para cima mexe em muitos ponteiros.
+        System.out.println("\n[3] Get(5) - Rotação profunda (Stress Test)...");
+        String val = tree.get(5);
+        System.out.println("   Valor retornado: " + val);
+
+        // CHECK 3
+        if (tree.size() == esperado) {
+            System.out.println("   [OK] Size manteve-se após get(5).");
+        } else {
+            System.out.println("   [ERRO CRÍTICO] Size mudou para " + tree.size() + " após get(5). Um ramo foi perdido!");
+        }
+
+        // 4. Teste de Update (Não deve alterar size)
+        System.out.println("\n[4] Put(50, ...) - Atualizar valor existente...");
+        tree.put(50, "Raiz Atualizada");
+
+        // CHECK 4
+        if (tree.size() == esperado) {
+            System.out.println("   [OK] Size manteve-se após update.");
+        } else {
+            System.out.println("   [ERRO] Size mudou após update! (Não devia inserir novo nó)");
+        }
+
+        // 5. Teste de Delete (Deve alterar size)
+        System.out.println("\n[5] Delete(20) - Removendo um nó...");
+        tree.delete(20);
+        esperado = 5; // Agora esperamos 5
+
+        // CHECK 5
+        if (tree.size() == esperado) {
+            System.out.println("   [OK] Size atualizou corretamente para " + tree.size());
+        } else {
+            System.out.println("   [ERRO] Delete falhou no size. Esperado: 5, Obtido: " + tree.size());
+        }
+
+        // Resumo final
+        System.out.println("\n=== FIM DOS TESTES ===");
+        if (tree.size() == 5 && tree.contains(5) && tree.contains(50) && !tree.contains(20)) {
+            System.out.println(">>> SUCESSO: A árvore está estável! <<<");
+        } else {
+            System.out.println(">>> FALHA: Verifique os erros acima. <<<");
+        }
     }
 
     public IUAlgTreeNode<Key, Value> getRoot() {
@@ -139,8 +215,11 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
         boolean wasRotated = false;
         UAlgTreeNode<Key, Value> parent;
+        UAlgTreeNode<Key, Value> oldParent;
+
         while (!nodes.isEmpty()) {
             parent = nodes.pop();
+            oldParent = parent;
             boolean isRoot = (parent == this.root);
 
             cmp = node.getKey().compareTo(parent.getKey());
@@ -159,17 +238,17 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
             if (wasRotated) {
                 if (!isRoot) {
-                    UAlgTreeNode<Key, Value> grandParent = nodes.pop();
+                    if (!nodes.isEmpty()) {
+                        UAlgTreeNode<Key, Value> grandParent = nodes.peek();
 
-                    cmp = parent.getKey().compareTo(grandParent.getKey());
-                    if (cmp > 0)
-                        grandParent.right = parent;
-                    else
-                        grandParent.left = parent;
+                        if (grandParent.left == oldParent)
+                            grandParent.left = parent;
+                        else
+                            grandParent.right = parent;
+                    }
                 } else {
                     this.root = parent;
                 }
-
                 break;
             }
 
