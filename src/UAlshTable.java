@@ -35,7 +35,7 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
 
     @Override
     public boolean isEmpty() {
-        return key == null;
+        return (key == null || is_deleted);
     }
 
     @Override
@@ -59,14 +59,12 @@ public class UAlshTable<Key, Value> {
             701819, 1403641, 2807303, 5614657,
             11229331, 22458671, 44917381, 89834777, 179669557
     };
-
+    private static int min;
     private final int DEFAULT_PRIME_INDEX = 4;
-
     private Function<Key, Integer> hc2;
     private int size;
     private int primeIndex;
     private int deletedKeys;
-
     //Tabelas
     private UAlshBucket<Key, Value>[] t1;
     private UAlshBucket<Key, Value>[] t2;
@@ -93,6 +91,10 @@ public class UAlshTable<Key, Value> {
         this.size = 0;
         this.primeIndex = primeIndex;
         this.deletedKeys = 0;
+    }
+
+    private static void resetMin() {
+        min = Integer.MAX_VALUE;
     }
 
     public int size() {
@@ -163,35 +165,35 @@ public class UAlshTable<Key, Value> {
     }
 
     public boolean containsKey(Key k) {
-        //TODO: implement
-        return false;
+        return get(k) != null;
     }
 
-    public Value get(Key k) {
-        int min = Integer.MAX_VALUE;
-        int khc1 = k.hashCode();
-        int khc2 = hc2.apply(k);
-
-        @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
+    private UAlshBucket<Key, Value>[] possibleBuckets(Key k) {
+        resetMin();
         UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
 
         for (int i = 1; i <= 5; i++) {
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(k, i)];
-
             if (bucket == null) {
                 min = 0;
                 break;
             }
-
             buckets[i - 1] = bucket;
             min = Math.min(min, bucket.getMaxSharedTable());
-
         }
+
+        return buckets;
+    }
+
+    public Value get(Key k) {
+        int khc1 = k.hashCode();
+        int khc2 = hc2.apply(k);
+
+        UAlshBucket<Key, Value>[] buckets = possibleBuckets(k);
+
         for (int i = min - 1; i >= 0; i--) {
             UAlshBucket<Key, Value> bucket = buckets[i];
-            if (bucket == null)
-                continue;
-
             if (!bucket.isDeleted() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
                 if (bucket.getKey().equals(k))
                     return bucket.getValue();
@@ -202,11 +204,32 @@ public class UAlshTable<Key, Value> {
     }
 
     public void put(Key k, Value v) {
-        //TODO: implement
+        int khc1 = k.hashCode();
+        int khc2 = hc2.apply(k);
+
+        UAlshBucket<Key, Value>[] buckets = possibleBuckets(k);
+
+        if (min == 0) {
+            fastPut(k, v);
+            return;
+        }
+
+        for (int i = min - 1; i >= 0; i--) {
+            if (!buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
+                if (buckets[i].getKey().equals(k)) {
+                    buckets[i].value = v;
+                    return;
+                }
+            }
+        }
+
+        fastPut(k, v);
     }
 
     public void fastPut(Key k, Value v) {
-        //TODO: implement
+        int khc1 = k.hashCode();
+        int khc2 = hc2.apply(k);
+
     }
 
     public void delete() {
