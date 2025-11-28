@@ -68,7 +68,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         this.root = new UAlgTreeNode<>(1, value, key);
     }
 
-
     public IUAlgTreeNode<Key, Value> getRoot() {
         return root;
     }
@@ -96,21 +95,21 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     private boolean isSafeLeftRotation(UAlgTreeNode<Key, Value> node) {
         if (node.right == null) return false;
 
-        long weight = UAlgTreeNodeWeight(node);
+        long weight = node.getWeight();
         long weightLeftKid = UAlgTreeNodeWeight(node.right.left);
         long weightRightKid = UAlgTreeNodeWeight(node.right.right);
 
-        return (2 * weight <= 7 * weightRightKid) && (2 * weight <= 7 * (weightLeftKid + weightRightKid));
+        return (2 * weight <= 7 * weightRightKid) && (2 * weight <= 7 * weightLeftKid + 2 * weightRightKid);
     }
 
     private boolean isSafeRightRotation(UAlgTreeNode<Key, Value> node) {
         if (node.left == null) return false;
 
-        long weight = UAlgTreeNodeWeight(node);
+        long weight = node.getWeight();
         long weightLeftKid = UAlgTreeNodeWeight(node.left.left);
         long weightRightKid = UAlgTreeNodeWeight(node.left.right);
 
-        return (2 * weight <= 7 * weightLeftKid) && (2 * weight <= 7 * (weightRightKid + weightLeftKid));
+        return (2 * weight <= 7 * weightLeftKid) && (2 * weight <= 7 * weightRightKid + 2 * weightLeftKid);
     }
 
     public Value get(Key k) {
@@ -142,7 +141,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         UAlgTreeNode<Key, Value> parent;
         while (!nodes.isEmpty()) {
             parent = nodes.pop();
-            boolean isRoot = parent == this.root;
+            boolean isRoot = (parent == this.root);
 
             cmp = node.getKey().compareTo(parent.getKey());
 
@@ -213,7 +212,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
         return node;
     }
-
 
     public void put(Key k, Value v) {
         if (v == null) {
@@ -297,8 +295,18 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             node.key = suc.key;
             node.value = suc.value;
 
-            node.right = delete(node.right, suc.key);
+            node.right = deleteSuc(node.right);
         }
+
+        node.size = updateUAlgTreeNodeSize(node);
+        node.weight = updateUAlgTreeNodeWeight(node);
+        return fixWeights(node);
+    }
+
+    private UAlgTreeNode<Key, Value> deleteSuc(UAlgTreeNode<Key, Value> node) {
+        if (node.left == null) return node.right;
+
+        node.left = deleteSuc(node.left);
 
         node.size = updateUAlgTreeNodeSize(node);
         node.weight = updateUAlgTreeNodeWeight(node);
