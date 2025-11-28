@@ -55,7 +55,7 @@ public class UAlshTable<Key, Value> {
     private static final int[] primes = {5, 7, 11, 17, 37, 79, 163, 331, 673, 1361, 2729, 5471, 10949, 21911, 43853, 87719, 175447, 350899, 701819, 1403641, 2807303, 5614657, 11229331, 22458671, 44917381, 89834777, 179669557};
     private static int min;
     private final int DEFAULT_PRIME_INDEX = 4;
-    private Function<Key, Integer> hc2;
+    private final Function<Key, Integer> hc2;
     private int size;
     private int primeIndex;
     private int deletedKeys;
@@ -262,7 +262,7 @@ public class UAlshTable<Key, Value> {
                     buckets[i].delete();
                     deletedKeys++;
                     size--;
-                    
+
                     break;
                 }
             }
@@ -273,12 +273,7 @@ public class UAlshTable<Key, Value> {
     }
 
     public Iterable<Key> keys() {
-        return new Iterable<Key>() {
-            @Override
-            public Iterator<Key> iterator() {
-                return new UalshIterator();
-            }
-        };
+        return UalshIterator::new;
     }
 
     public class UalshIterator implements Iterator<Key> {
