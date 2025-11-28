@@ -43,8 +43,8 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
         return is_deleted;
     }
 
-    private void setDelete(boolean state) {
-        is_deleted = state;
+    void delete() {
+        is_deleted = true;
     }
 }
 
@@ -248,7 +248,28 @@ public class UAlshTable<Key, Value> {
     }
 
     public void delete(Key k) {
-            
+        int khc1 = k.hashCode();
+        int khc2 = hc2.apply(k);
+
+        UAlshBucket<Key, Value>[] buckets = possibleBuckets(k);
+
+        if (min == 0) {
+            return;
+        }
+        for (int i = min - 1; i >= 0; i--) {
+            if (!buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
+                if (buckets[i].getKey().equals(k)) {
+                    buckets[i].delete();
+                    deletedKeys++;
+                    size--;
+                    
+                    break;
+                }
+            }
+        }
+
+        if (size < primes[primeIndex] / 4)
+            resize(--primeIndex);
     }
 
     public Iterable<Key> keys() {
