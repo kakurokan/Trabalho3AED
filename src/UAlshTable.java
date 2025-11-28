@@ -229,10 +229,10 @@ public class UAlshTable<Key, Value> {
         public UalshIterator() {
             this.currentTableIndex = 1;
             this.currentBucketIndex = 0;
-            findnext();
+            findNext();
         }
 
-        private void findnext() {
+        private void findNext() {
             bucket = null;
             while (bucket == null && currentTableIndex <= 5) {
                 UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(currentTableIndex);
@@ -261,7 +261,7 @@ public class UAlshTable<Key, Value> {
                 throw new NoSuchElementException();
             }
             Key k = bucket.getKey();
-            findnext();
+            findNext();
             return k;
         }
     }
