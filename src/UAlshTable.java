@@ -52,13 +52,7 @@ public class UAlshTable<Key, Value> {
 
     //mudei de ideais relativamente aos primos iniciais, iremos usar
     //37, 17, 11, 7, e 5. Esta mudança não tem qualquer impacto significativo
-    private static final int[] primes = {
-            5, 7, 11, 17, 37, 79, 163, 331,
-            673, 1361, 2729, 5471, 10949,
-            21911, 43853, 87719, 175447, 350899,
-            701819, 1403641, 2807303, 5614657,
-            11229331, 22458671, 44917381, 89834777, 179669557
-    };
+    private static final int[] primes = {5, 7, 11, 17, 37, 79, 163, 331, 673, 1361, 2729, 5471, 10949, 21911, 43853, 87719, 175447, 350899, 701819, 1403641, 2807303, 5614657, 11229331, 22458671, 44917381, 89834777, 179669557};
     private static int min;
     private final int DEFAULT_PRIME_INDEX = 4;
     private Function<Key, Integer> hc2;
@@ -125,8 +119,7 @@ public class UAlshTable<Key, Value> {
     }
 
     private void resize(int new_primeIndex) {
-        if (new_primeIndex < DEFAULT_PRIME_INDEX || new_primeIndex >= primes.length)
-            return;
+        if (new_primeIndex < DEFAULT_PRIME_INDEX || new_primeIndex >= primes.length) return;
 
         UAlshTable<Key, Value> new_table = new UAlshTable<>(this.hc2, new_primeIndex);
 
@@ -150,16 +143,11 @@ public class UAlshTable<Key, Value> {
     }
 
     public IUAlshBucket<Key, Value>[] getSubTable(int i) {
-        if (i == 1)
-            return t1;
-        else if (i == 2)
-            return t2;
-        else if (i == 3)
-            return t3;
-        else if (i == 4)
-            return t4;
-        else if (i == 5)
-            return t5;
+        if (i == 1) return t1;
+        else if (i == 2) return t2;
+        else if (i == 3) return t3;
+        else if (i == 4) return t4;
+        else if (i == 5) return t5;
 
         return null;
     }
@@ -195,8 +183,7 @@ public class UAlshTable<Key, Value> {
         for (int i = min - 1; i >= 0; i--) {
             UAlshBucket<Key, Value> bucket = buckets[i];
             if (!bucket.isDeleted() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
-                if (bucket.getKey().equals(k))
-                    return bucket.getValue();
+                if (bucket.getKey().equals(k)) return bucket.getValue();
             }
         }
 
@@ -226,14 +213,42 @@ public class UAlshTable<Key, Value> {
         fastPut(k, v);
     }
 
+    @SuppressWarnings("unchecked")
     public void fastPut(Key k, Value v) {
-        int khc1 = k.hashCode();
-        int khc2 = hc2.apply(k);
+        if (this.size >= t1.length) {
+            resize(primeIndex + 1);
+        }
 
+        UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
+        int sharedTable = 0;
+
+        for (int i = 1; i <= 5; i++) {
+            int UAsh = UAsh(k, i);
+
+            if (getSubTable(i)[UAsh] == null || getSubTable(i)[UAsh].isDeleted()) {
+
+                if (getSubTable(i)[UAsh] != null && getSubTable(i)[UAsh].isDeleted()) {
+                    this.deletedKeys--;
+                }
+
+                getSubTable(i)[UAsh] = new UAlshBucket<>(v, k, hc2);
+                buckets[i - 1] = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh];
+                sharedTable = i;
+                break;
+            } else {
+                buckets[i - 1] = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh];
+            }
+        }
+        for (UAlshBucket<Key, Value> bucket : buckets) {
+            if (bucket != null)
+                bucket.maxSharedTable = Math.max(bucket.maxSharedTable, sharedTable);
+        }
+
+        this.size++;
     }
 
-    public void delete() {
-        //TODO: implement
+    public void delete(Key k) {
+            
     }
 
     public Iterable<Key> keys() {
