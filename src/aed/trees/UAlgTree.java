@@ -271,7 +271,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             node.key = suc.key;
             node.value = suc.value;
 
-            node.right = delete(node.right, k);
+            node.right = delete(node.right, suc.key);
         }
 
         node.size = updateUAlgTreeNodeSize(node);
