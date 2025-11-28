@@ -3,9 +3,6 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
-    //devem guardar no balde tudo o que for necessário para implementar
-    //as funções públicas da interface. Mas podem também adicionar outros
-    //campos e métodos (incluindo o construtor), caso o entendam.
 
     Key key;
     Value value;
@@ -44,6 +41,10 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
     @Override
     public boolean isDeleted() {
         return is_deleted;
+    }
+
+    private void setDelete(boolean state) {
+        is_deleted = state;
     }
 }
 
