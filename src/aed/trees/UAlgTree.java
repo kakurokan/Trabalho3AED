@@ -1,3 +1,4 @@
+package aed.trees;
 //this is defined as an outer class because that way we can save 8 bytes for each node.
 //and we don't really need a pointer to the UAlgTree Object anyway
 
@@ -106,8 +107,8 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         if (node.left == null) return false;
 
         int weight = UAlgTreeNodeWeight(node);
-        int weightLeftKid = UAlgTreeNodeWeight(node.right.left);
-        int weightRightKid = UAlgTreeNodeWeight(node.right.right);
+        int weightLeftKid = UAlgTreeNodeWeight(node.left.left);
+        int weightRightKid = UAlgTreeNodeWeight(node.left.right);
 
         return (weight <= 3.5 * weightLeftKid) && (weight <= 3.5 * weightRightKid + weightLeftKid);
     }
