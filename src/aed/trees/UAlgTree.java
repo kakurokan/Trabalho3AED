@@ -187,24 +187,24 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         int weightLeft = UAlgTreeNodeWeight(node.left);
         int weightRight = UAlgTreeNodeWeight(node.right);
 
-        if (weightLeft < 0.4 * weightRight) {
+        if (10 * weightLeft < 4 * weightRight) {
             assert node.right != null;
 
             int weightKidLeft = UAlgTreeNodeWeight(node.right.left);
             int weightKidRight = UAlgTreeNodeWeight(node.right.right);
 
-            if (weightKidLeft > 1.5 * weightKidRight) {
+            if (2 * weightKidLeft > 3 * weightKidRight) {
                 node.right = rotateRight(node.right);
             }
 
             node = rotateLeft(node);
-        } else if (weightRight < 0.4 * weightLeft) {
+        } else if (5 * weightRight < 2 * weightLeft) {
             assert node.left != null;
 
             int weightKidLeft = UAlgTreeNodeWeight(node.left.left);
             int weightKidRight = UAlgTreeNodeWeight(node.left.right);
 
-            if (weightKidRight > 1.5 * weightKidLeft) {
+            if (2 * weightKidRight > 3 * weightKidLeft) {
                 node.left = rotateLeft(node.left);
             }
 
