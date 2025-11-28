@@ -162,7 +162,7 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         int weightLeft = UAlgTreeNodeWeight(node.left);
         int weightRight = UAlgTreeNodeWeight(node.right);
 
-        if (10 * weightLeft < 4 * weightRight) {
+        if (5 * weightLeft < 2 * weightRight) {
             assert node.right != null;
 
             int weightKidLeft = UAlgTreeNodeWeight(node.right.left);
