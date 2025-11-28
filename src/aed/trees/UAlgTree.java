@@ -216,6 +216,10 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
 
     public void put(Key k, Value v) {
+        if (v == null) {
+            delete(k);
+            return;
+        }
         this.root = put(this.root, k, v);
     }
 
