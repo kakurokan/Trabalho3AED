@@ -1,3 +1,5 @@
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
@@ -211,7 +213,56 @@ public class UAlshTable<Key, Value> {
     }
 
     public Iterable<Key> keys() {
-        //TODO: implement
-        return null;
+        return new Iterable<Key>() {
+            @Override
+            public Iterator<Key> iterator() {
+                return new UalshIterator();
+            }
+        };
+    }
+
+    public class UalshIterator implements Iterator<Key> {
+        private int currentTableIndex;
+        private int currentBucketIndex;
+        private UAlshBucket<Key, Value> bucket;
+
+        public UalshIterator() {
+            this.currentTableIndex = 1;
+            this.currentBucketIndex = 0;
+            findnext();
+        }
+
+        private void findnext() {
+            bucket = null;
+            while (bucket == null && currentTableIndex <= 5) {
+                UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(currentTableIndex);
+                while (currentBucketIndex < table.length) {
+                    UAlshBucket<Key, Value> temp = table[currentBucketIndex];
+                    if (temp != null && !temp.isDeleted()) {
+                        bucket = temp;
+                        currentBucketIndex++;
+                        return;
+                    }
+                    currentBucketIndex++;
+                }
+                currentTableIndex++;
+                currentBucketIndex = 0;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return bucket != null;
+        }
+
+        @Override
+        public Key next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            Key k = bucket.getKey();
+            findnext();
+            return k;
+        }
     }
 }
