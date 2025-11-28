@@ -148,6 +148,9 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             this.foundValue = node.value;
         }
 
+        node.size = updateUAlgTreeNodeSize(node);
+        node.weight = updateUAlgTreeNodeWeight(node);
+
         return node;
     }
 
@@ -268,18 +271,8 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             node.key = suc.key;
             node.value = suc.value;
 
-            node.right = deleteSuc(node.right);
+            node.right = delete(node.right, k);
         }
-
-        node.size = updateUAlgTreeNodeSize(node);
-        node.weight = updateUAlgTreeNodeWeight(node);
-        return fixWeights(node);
-    }
-
-    private UAlgTreeNode<Key, Value> deleteSuc(UAlgTreeNode<Key, Value> node) {
-        if (node.left == null) return node.right;
-
-        node.left = deleteSuc(node.left);
 
         node.size = updateUAlgTreeNodeSize(node);
         node.weight = updateUAlgTreeNodeWeight(node);
