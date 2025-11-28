@@ -96,21 +96,21 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     private boolean isSafeLeftRotation(UAlgTreeNode<Key, Value> node) {
         if (node.right == null) return false;
 
-        int weight = UAlgTreeNodeWeight(node);
-        int weightLeftKid = UAlgTreeNodeWeight(node.right.left);
-        int weightRightKid = UAlgTreeNodeWeight(node.right.right);
+        long weight = UAlgTreeNodeWeight(node);
+        long weightLeftKid = UAlgTreeNodeWeight(node.right.left);
+        long weightRightKid = UAlgTreeNodeWeight(node.right.right);
 
-        return (weight <= 3.5 * weightRightKid) && (weight <= 3.5 * weightLeftKid + weightRightKid);
+        return (2 * weight <= 7 * weightRightKid) && (2 * weight <= 7 * (weightLeftKid + weightRightKid));
     }
 
     private boolean isSafeRightRotation(UAlgTreeNode<Key, Value> node) {
         if (node.left == null) return false;
 
-        int weight = UAlgTreeNodeWeight(node);
-        int weightLeftKid = UAlgTreeNodeWeight(node.left.left);
-        int weightRightKid = UAlgTreeNodeWeight(node.left.right);
+        long weight = UAlgTreeNodeWeight(node);
+        long weightLeftKid = UAlgTreeNodeWeight(node.left.left);
+        long weightRightKid = UAlgTreeNodeWeight(node.left.right);
 
-        return (weight <= 3.5 * weightLeftKid) && (weight <= 3.5 * weightRightKid + weightLeftKid);
+        return (2 * weight <= 7 * weightLeftKid) && (2 * weight <= 7 * (weightRightKid + weightLeftKid));
     }
 
     public Value get(Key k) {
@@ -291,10 +291,9 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             //2 filhos
             UAlgTreeNode<Key, Value> suc = getSucessor(node);
             node.key = suc.key;
-            suc.key = k;
             node.value = suc.value;
 
-            node.right = delete(node.right, k);
+            node.right = delete(node.right, suc.key);
         }
 
         node.size = updateUAlgTreeNodeSize(node);
