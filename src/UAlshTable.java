@@ -224,7 +224,7 @@ public class UAlshTable<Key, Value> {
     public class UalshIterator implements Iterator<Key> {
         private int currentTableIndex;
         private int currentBucketIndex;
-        private UAlshBucket<Key, Value> bucket;
+        private UAlshBucket<Key, Value> currentBucket;
 
         public UalshIterator() {
             this.currentTableIndex = 1;
@@ -233,13 +233,13 @@ public class UAlshTable<Key, Value> {
         }
 
         private void findNext() {
-            bucket = null;
-            while (bucket == null && currentTableIndex <= 5) {
+            currentBucket = null;
+            while (currentBucket == null && currentTableIndex <= 5) {
                 UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(currentTableIndex);
                 while (currentBucketIndex < table.length) {
-                    UAlshBucket<Key, Value> temp = table[currentBucketIndex];
-                    if (temp != null && !temp.isDeleted()) {
-                        bucket = temp;
+                    UAlshBucket<Key, Value> tempBucket = table[currentBucketIndex];
+                    if (tempBucket != null && !tempBucket.isDeleted()) {
+                        currentBucket = tempBucket;
                         currentBucketIndex++;
                         return;
                     }
@@ -252,7 +252,7 @@ public class UAlshTable<Key, Value> {
 
         @Override
         public boolean hasNext() {
-            return bucket != null;
+            return currentBucket != null;
         }
 
         @Override
@@ -260,7 +260,7 @@ public class UAlshTable<Key, Value> {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            Key k = bucket.getKey();
+            Key k = currentBucket.getKey();
             findNext();
             return k;
         }
