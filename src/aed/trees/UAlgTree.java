@@ -1,7 +1,4 @@
 package aed.trees;
-//this is defined as an outer class because that way we can save 8 bytes for each node.
-//and we don't really need a pointer to the UAlgTree Object anyway
-
 //W(n) = nº de ponteiros "null" existentes na sub-árvore que começa em "n"
 //w(null) = 1
 //w(n) = w(left(n)) + w(right(n))
@@ -67,7 +64,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
     private UAlgTreeNode<Key, Value> root;
     private boolean wasRotated;
     private Value foundValue;
-    private boolean wasFound;
 
     public UAlgTree() {
         this.root = null;
@@ -196,7 +192,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             delete(k);
             return;
         }
-        wasFound = false;
         this.root = put(this.root, k, v);
     }
 
@@ -208,14 +203,12 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         else if (cmp < 0) node.left = put(node.left, k, v);
         else {
             node.value = v;
-            wasFound = true;
+            return node;
         }
 
-        if (!wasFound) {
-            node.size = updateUAlgTreeNodeSize(node);
-            node.weight = updateUAlgTreeNodeWeight(node);
-            node = fixWeights(node);
-        }
+        node.size = updateUAlgTreeNodeSize(node);
+        node.weight = updateUAlgTreeNodeWeight(node);
+        node = fixWeights(node);
         return node;
     }
 
