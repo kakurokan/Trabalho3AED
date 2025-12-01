@@ -130,9 +130,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             node.right = get(node.right, k);
 
             if (this.foundValue != null && !this.wasRotated) {
-                node.size = updateUAlgTreeNodeSize(node);
-                node.weight = updateUAlgTreeNodeWeight(node);
-
                 if (node == this.root || isSafeLeftRotation(node)) {
                     node = rotateLeft(node);
                     this.wasRotated = true;
@@ -142,9 +139,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             node.left = get(node.left, k);
 
             if (this.foundValue != null && !this.wasRotated) {
-                node.size = updateUAlgTreeNodeSize(node);
-                node.weight = updateUAlgTreeNodeWeight(node);
-
                 if (node == this.root || isSafeRightRotation(node)) {
                     node = rotateRight(node);
                     this.wasRotated = true;
