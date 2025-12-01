@@ -130,6 +130,9 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             node.right = get(node.right, k);
 
             if (this.foundValue != null && !this.wasRotated) {
+                node.size = updateUAlgTreeNodeSize(node);
+                node.weight = updateUAlgTreeNodeWeight(node);
+
                 if (node == this.root || isSafeLeftRotation(node)) {
                     node = rotateLeft(node);
                     this.wasRotated = true;
@@ -139,6 +142,9 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             node.left = get(node.left, k);
 
             if (this.foundValue != null && !this.wasRotated) {
+                node.size = updateUAlgTreeNodeSize(node);
+                node.weight = updateUAlgTreeNodeWeight(node);
+
                 if (node == this.root || isSafeRightRotation(node)) {
                     node = rotateRight(node);
                     this.wasRotated = true;
@@ -146,11 +152,6 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             }
         } else {
             this.foundValue = node.value;
-        }
-
-        if (this.wasRotated) {
-            node.size = updateUAlgTreeNodeSize(node);
-            node.weight = updateUAlgTreeNodeWeight(node);
         }
 
         return node;
@@ -203,13 +204,11 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         else if (cmp < 0) node.left = put(node.left, k, v);
         else {
             node.value = v;
-            return node;
         }
 
         node.size = updateUAlgTreeNodeSize(node);
         node.weight = updateUAlgTreeNodeWeight(node);
-        node = fixWeights(node);
-        return node;
+        return fixWeights(node);
     }
 
     private UAlgTreeNode<Key, Value> rotateLeft(UAlgTreeNode<Key, Value> node) {
@@ -269,8 +268,8 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
 
             //2 filhos
             UAlgTreeNode<Key, Value> suc = getSucessor(node);
-            node.key = suc.key;
-            node.value = suc.value;
+            node.key = suc.getKey();
+            node.value = suc.getValue();
 
             node.right = delete(node.right, suc.key);
         }

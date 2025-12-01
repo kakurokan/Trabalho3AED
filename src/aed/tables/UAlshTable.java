@@ -1,3 +1,5 @@
+package aed.tables;
+
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Function;

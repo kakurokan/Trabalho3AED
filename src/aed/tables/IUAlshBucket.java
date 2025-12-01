@@ -1,3 +1,5 @@
+package aed.tables;
+
 public interface IUAlshBucket<Key, Value> {
     public Key getKey();
 
