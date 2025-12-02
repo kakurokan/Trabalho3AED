@@ -13,12 +13,12 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
     int hc2;
     private boolean is_deleted;
 
-    public UAlshBucket(Value value, Key key, Function<Key, Integer> hc2) {
+    UAlshBucket(Value value, Key key, Function<Key, Integer> hc2) {
         this.value = value;
         this.key = key;
         is_deleted = false;
         this.hc1 = key.hashCode();
-        this.hc1 = hc2.apply(key);
+        this.hc2 = hc2.apply(key);
     }
 
     public int getMaxSharedTable() {
@@ -55,9 +55,9 @@ public class UAlshTable<Key, Value> {
     //mudei de ideais relativamente aos primos iniciais, iremos usar
     //37, 17, 11, 7, e 5. Esta mudança não tem qualquer impacto significativo
     private static final int[] primes = {5, 7, 11, 17, 37, 79, 163, 331, 673, 1361, 2729, 5471, 10949, 21911, 43853, 87719, 175447, 350899, 701819, 1403641, 2807303, 5614657, 11229331, 22458671, 44917381, 89834777, 179669557};
-    private static int min;
     private final int DEFAULT_PRIME_INDEX = 4;
     private final Function<Key, Integer> hc2;
+    private int min;
     private int size;
     private int primeIndex;
     private int deletedKeys;
@@ -82,14 +82,21 @@ public class UAlshTable<Key, Value> {
         this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 4]];
     }
 
+    @SuppressWarnings("unchecked")
     private UAlshTable(Function<Key, Integer> hc2, int primeIndex) {
         this.hc2 = hc2;
         this.size = 0;
         this.primeIndex = primeIndex;
         this.deletedKeys = 0;
+
+        this.t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX]];
+        this.t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 1]];
+        this.t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 2]];
+        this.t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 3]];
+        this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 4]];
     }
 
-    private static void resetMin() {
+    private void resetMin() {
         min = Integer.MAX_VALUE;
     }
 
