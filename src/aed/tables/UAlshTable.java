@@ -98,7 +98,7 @@ public class UAlshTable<Key, Value> {
     }
 
     private int UAsh(Key k, int i) {
-        return ((k.hashCode() + hc2.apply(k)) & 0x7fffffff) % getSubTable(i).length;
+        return ((k.hashCode() + (i * hc2.apply(k))) & 0x7fffffff) % getSubTable(i).length;
     }
 
     public int getMainCapacity() {
@@ -217,7 +217,7 @@ public class UAlshTable<Key, Value> {
 
     @SuppressWarnings("unchecked")
     public void fastPut(Key k, Value v) {
-        if (this.size >= t1.length) {
+        if (this.size >= 0.85 * t1.length) {
             resize(primeIndex + 1);
         }
 
