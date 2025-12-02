@@ -104,11 +104,15 @@ public class UAlshTable<Key, Value> {
 
         table.put(2, 80);
         table.put(80, 2);
+        
+        table.put(2, null);
 
-        System.out.println(table.get(100));
-        System.out.println(table.get(2));
-        System.out.println(table.get(3));
-        System.out.println(table.getLoadFactor());
+        Iterable<Integer> iteravel = table.keys();
+
+        for (Integer key : iteravel)
+            System.out.println("key: " + key + " value: " + table.get(key));
+
+        System.out.println("size: " + table.size());
     }
 
     private void resetMin() {
@@ -124,7 +128,7 @@ public class UAlshTable<Key, Value> {
     }
 
     public int getMainCapacity() {
-        return this.primeIndex;
+        return primes[this.primeIndex];
     }
 
     public int getTotalCapacity() {
