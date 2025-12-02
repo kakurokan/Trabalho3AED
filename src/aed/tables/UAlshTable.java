@@ -155,13 +155,14 @@ public class UAlshTable<Key, Value> {
     }
 
     public IUAlshBucket<Key, Value>[] getSubTable(int i) {
-        if (i == 1) return t1;
-        else if (i == 2) return t2;
-        else if (i == 3) return t3;
-        else if (i == 4) return t4;
-        else if (i == 5) return t5;
-
-        return null;
+        return switch (i) {
+            case 1 -> t1;
+            case 2 -> t2;
+            case 3 -> t3;
+            case 4 -> t4;
+            case 5 -> t5;
+            default -> null;
+        };
     }
 
     public boolean containsKey(Key k) {
@@ -247,7 +248,6 @@ public class UAlshTable<Key, Value> {
         }
 
     }
-
 
     @SuppressWarnings("unchecked")
     private boolean fastPutHelper(Key k, Value v, int khc1, int khc2) {
