@@ -84,7 +84,7 @@ public class UAlshTable<Key, Value> {
 
         initTables(primeIndex);
     }
-    
+
     @SuppressWarnings("unchecked")
     private void initTables(int primeIndex) {
 
@@ -229,21 +229,30 @@ public class UAlshTable<Key, Value> {
     }
 
     public void fastPut(Key k, Value v) {
+        int khc1 = k.hashCode();
+        int khc2 = hc2.apply(k);
+
+        fastPut(k, v, khc1, khc2);
+    }
+
+    private void fastPut(Key k, Value v, int khc1, int khc2) {
         if (this.size >= 0.85 * t1.length) {
             resize(primeIndex + 1);
         }
 
-        int khc1 = k.hashCode();
-        int khc2 = hc2.apply(k);
+        boolean wasAdded = fastPutHelper(k, v, khc1, khc2);
+        while (!wasAdded) {
+            resize(primeIndex + 1);
+            wasAdded = fastPutHelper(k, v, khc1, khc2);
+        }
 
-        fastPutHelper(k, v, khc1, khc2);
     }
 
+
     @SuppressWarnings("unchecked")
-    private void fastPutHelper(Key k, Value v, int khc1, int khc2) {
+    private boolean fastPutHelper(Key k, Value v, int khc1, int khc2) {
         UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
         int sharedTable = 0;
-
         for (int i = 1; i <= 5; i++) {
             int UAsh = UAsh(i, khc1, khc2);
             UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(i);
@@ -252,7 +261,6 @@ public class UAlshTable<Key, Value> {
                 table[UAsh] = new UAlshBucket<>(v, k, khc1, khc2, 0);
                 buckets[i - 1] = table[UAsh];
                 sharedTable = i;
-
                 this.size++;
                 break;
             }
@@ -262,14 +270,8 @@ public class UAlshTable<Key, Value> {
             if (bucket != null)
                 bucket.maxSharedTable = Math.max(bucket.maxSharedTable, sharedTable);
         }
-    }
 
-    public void fastPut(Key k, Value v, int khc1, int khc2) {
-        if (this.size >= 0.85 * t1.length) {
-            resize(primeIndex + 1);
-        }
-
-        fastPutHelper(k, v, khc1, khc2);
+        return sharedTable != 0;
     }
 
     public void delete(Key k) {
