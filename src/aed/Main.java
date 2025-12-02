@@ -1,0 +1,92 @@
+package aed;
+
+import aed.trees.UAlgTree;
+import aed.utils.TemporalAnalysisUtils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+import java.util.function.Consumer;
+
+public class Main {
+    private static UAlgTree<Integer, Integer> createUalgTree(int n) {
+        UAlgTree<Integer, Integer> tree = new UAlgTree<>();
+        for (int i = 0; i < n; i++) {
+            tree.put(i, i);
+        }
+        return tree;
+    }
+
+    public static void testRacioDecrescente() {
+        UAlgTree<Integer, Object> tree_teste = new UAlgTree<>();
+        for (int i = 100000; i > 0; i--) {
+            tree_teste.put(i, i);
+        }
+        System.out.println((double) tree_teste.maxDepth() / tree_teste.minDepth());
+    }
+
+    public static void testRacioCrescente() {
+        UAlgTree<Integer, Object> tree_teste = new UAlgTree<>();
+        for (int i = 0; i < 100000; i++) {
+            tree_teste.put(i, i);
+        }
+        System.out.println((double) tree_teste.maxDepth() / tree_teste.minDepth());
+    }
+
+    public static void testRacioAleatorio() {
+        int n = 100000;
+        ArrayList<Integer> lista_aleatorio = new ArrayList<>();
+        UAlgTree<Integer, Object> tree_teste = new UAlgTree<>();
+        for (int i = 0; i < n; i++) {
+            lista_aleatorio.add(i);
+        }
+        Collections.shuffle(lista_aleatorio);
+        for (int i = 0; i < n; i++) {
+            tree_teste.put(lista_aleatorio.get(i), i);
+        }
+        System.out.println((double) tree_teste.maxDepth() / tree_teste.minDepth());
+    }
+
+    public static void main(String[] args) {
+
+        Random random = new Random();
+        System.out.println("TESTE DE RACIO COM INSERÇÃO DECRESCENTE:");
+        for (int i = 0; i < 10; i++) {
+            testRacioDecrescente();
+        }
+
+        System.out.println("TESTE DE RACIO COM INSERÇÃO CRESCENTE:");
+        for (int i = 0; i < 10; i++) {
+            testRacioCrescente();
+        }
+
+        System.out.println("TESTE DE RACIO COM INSERÇÃO DE ELEMENTOS ALEATORIOS:");
+        for (int i = 0; i < 10; i++) {
+            testRacioAleatorio();
+        }
+        Consumer<UAlgTree<Integer, Integer>> testUalgTree = (tree) -> {
+            Random r = new Random();
+            int n = tree.size();
+            for (int i = 0; i < n; i++) {
+                tree.get(r.nextInt(n));
+            }
+        };
+        TemporalAnalysisUtils.runDoublingRatioTest(Main::createUalgTree, testUalgTree, 4); //Teste de razão dobrada com logica de Pareto
+        Consumer<UAlgTree<Integer, Integer>> testUAlgTreePareto = (tree) -> {
+            Random r = new Random();
+            int n = tree.size();
+            int temp = (int) (0.20 * n);
+            for (int i = 0; i < n; i++) {
+                double v = r.nextDouble(0.0, 1.0);
+                if (v < 0.8) {
+                    tree.get(r.nextInt(temp));
+                } else {
+                    tree.get(r.nextInt(temp, n));
+                }
+            }
+        };
+        TemporalAnalysisUtils.runDoublingRatioTest(Main::createUalgTree, testUAlgTreePareto, 4); //Teste de razão dobrada com logica de Pareto
+
+    }
+}
+

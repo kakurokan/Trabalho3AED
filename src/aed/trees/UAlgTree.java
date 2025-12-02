@@ -299,6 +299,31 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
         return copy;
     }
 
+    public int maxDepth() {
+        return maxDepth(this.root);
+    }
+
+    private int maxDepth(UAlgTreeNode<Key, Value> node) {
+        if (node == null) return 0;
+        return 1 + Math.max(maxDepth(node.left), maxDepth(node.right));
+    }
+
+    public int minDepth() {
+        return minDepth(this.root);
+    }
+
+    private int minDepth(UAlgTreeNode<Key, Value> node) {
+        if (node == null) return 0;
+
+        if (node.left == null && node.right == null) return 1;
+
+        if (node.left == null) return 1 + minDepth(node.right);
+
+        if (node.right == null) return 1 + minDepth(node.left);
+
+        return 1 + Math.min(minDepth(node.left), minDepth(node.right));
+    }
+
     public class ValueIterator implements Iterator<Value> {
         private final Stack<UAlgTreeNode<Key, Value>> stack = new Stack<>();
 
@@ -354,4 +379,5 @@ public class UAlgTree<Key extends Comparable<Key>, Value> {
             return node.getKey();
         }
     }
+
 }
