@@ -163,7 +163,7 @@ public class UAlshTable<Key, Value> {
     }
 
     public int size() {
-        return this.size;
+        return this.size - this.deletedKeys;
     }
 
     private int UAsh(Key k, int i) {
@@ -284,7 +284,6 @@ public class UAlshTable<Key, Value> {
                 if (buckets[i].getKey().equals(k)) {
                     if (buckets[i].isDeleted()) {
                         this.deletedKeys--;
-                        this.size++;
                         buckets[i].is_deleted = false;
                     }
                     buckets[i].value = v;
@@ -323,7 +322,6 @@ public class UAlshTable<Key, Value> {
                 buckets[i - 1] = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh];
 
                 sharedTable = i;
-                this.size++;
                 this.deletedKeys--;
                 break;
             }
@@ -349,16 +347,13 @@ public class UAlshTable<Key, Value> {
             if (buckets[i] != null && !buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
                 if (buckets[i].getKey().equals(k)) {
                     buckets[i].delete();
-
                     this.deletedKeys++;
-                    this.size--;
-
                     break;
                 }
             }
         }
 
-        if (primeIndex > DEFAULT_PRIME_INDEX && (this.size < 0.25 * primes[primeIndex]))
+        if (primeIndex > DEFAULT_PRIME_INDEX && (size() < 0.25 * primes[primeIndex]))
             resize(this.primeIndex - 1);
     }
 
