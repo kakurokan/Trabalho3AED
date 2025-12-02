@@ -96,6 +96,18 @@ public class UAlshTable<Key, Value> {
         this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 4]];
     }
 
+    public static void main(String[] args) {
+        UAlshTable<Integer, Integer> table = new UAlshTable<>(Object::hashCode);
+
+        for (int i = 0; i < 10; i++)
+            table.fastPut(i, i + 1);
+
+        table.put(2, 80);
+
+        System.out.println(table.get(2));
+        System.out.println(table.get(3));
+    }
+
     private void resetMin() {
         min = Integer.MAX_VALUE;
     }
@@ -190,7 +202,7 @@ public class UAlshTable<Key, Value> {
 
         for (int i = min - 1; i >= 0; i--) {
             UAlshBucket<Key, Value> bucket = buckets[i];
-            if (!bucket.isDeleted() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
+            if (bucket != null && !bucket.isDeleted() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
                 if (bucket.getKey().equals(k)) return bucket.getValue();
             }
         }
@@ -204,13 +216,13 @@ public class UAlshTable<Key, Value> {
 
         UAlshBucket<Key, Value>[] buckets = possibleBuckets(k);
 
-        if (min == 0) {
+        if (min == Integer.MAX_VALUE) {
             fastPut(k, v);
             return;
         }
 
         for (int i = min - 1; i >= 0; i--) {
-            if (!buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
+            if (buckets[i] != null && !buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
                 if (buckets[i].getKey().equals(k)) {
                     buckets[i].value = v;
                     return;
@@ -265,7 +277,7 @@ public class UAlshTable<Key, Value> {
             return;
         }
         for (int i = min - 1; i >= 0; i--) {
-            if (!buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
+            if (buckets[i] != null && !buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
                 if (buckets[i].getKey().equals(k)) {
                     buckets[i].delete();
                     deletedKeys++;
