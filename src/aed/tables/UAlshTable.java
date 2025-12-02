@@ -120,7 +120,7 @@ public class UAlshTable<Key, Value> {
     }
 
     public float getLoadFactor() {
-        return size() / (float) getTotalCapacity();
+        return this.size / (float) getTotalCapacity();
     }
 
     public int getDeletedNotRemoved() {
@@ -241,7 +241,7 @@ public class UAlshTable<Key, Value> {
         }
 
         boolean wasAdded = fastPutHelper(k, v, khc1, khc2);
-        while (!wasAdded) {
+        while (!wasAdded && primeIndex < primes.length - 1) {
             resize(primeIndex + 1);
             wasAdded = fastPutHelper(k, v, khc1, khc2);
         }
@@ -290,7 +290,7 @@ public class UAlshTable<Key, Value> {
             }
         }
 
-        if (size() < 0.25 * primes[primeIndex])
+        if (primeIndex > DEFAULT_PRIME_INDEX && size() < 0.25 * primes[primeIndex])
             resize(this.primeIndex - 1);
     }
 
@@ -311,16 +311,16 @@ public class UAlshTable<Key, Value> {
 
         private void findNext() {
             currentBucket = null;
-            while (currentBucket == null && currentTableIndex <= 5) {
+
+            while (currentTableIndex <= 5) {
                 UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(currentTableIndex);
+
                 while (currentBucketIndex < table.length) {
-                    UAlshBucket<Key, Value> tempBucket = table[currentBucketIndex];
+                    UAlshBucket<Key, Value> tempBucket = table[currentBucketIndex++];
                     if (tempBucket != null && !tempBucket.isDeleted()) {
                         currentBucket = tempBucket;
-                        currentBucketIndex++;
                         return;
                     }
-                    currentBucketIndex++;
                 }
                 currentTableIndex++;
                 currentBucketIndex = 0;
