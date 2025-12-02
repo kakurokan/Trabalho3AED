@@ -238,9 +238,11 @@ public class UAlshTable<Key, Value> {
 
     @SuppressWarnings("unchecked")
     private void fastPut(Key k, Value v, int khc1, int khc2) {
-        if (this.size >= 0.85 * t1.length) {
+        if (this.size >= 0.85 * primes[primeIndex]) {
             resize(primeIndex + 1);
         }
+
+        boolean wasAdded = false;
 
         UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
         int sharedTable = 0;
@@ -253,10 +255,18 @@ public class UAlshTable<Key, Value> {
                 buckets[i - 1] = table[UAsh];
                 sharedTable = i;
                 this.size++;
+                wasAdded = true;
                 break;
             }
             buckets[i - 1] = table[UAsh];
         }
+
+        if (!wasAdded) {
+            resize(primeIndex + 1);
+            fastPut(k, v, khc1, khc2);
+            return;
+        }
+
         for (UAlshBucket<Key, Value> bucket : buckets) {
             if (bucket != null)
                 bucket.maxSharedTable = Math.max(bucket.maxSharedTable, sharedTable);
@@ -266,6 +276,7 @@ public class UAlshTable<Key, Value> {
     public void delete(Key k) {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
+        boolean wasDeleted = false;
 
         UAlshBucket<Key, Value>[] buckets = possibleBuckets(khc1, khc2);
 
@@ -274,12 +285,13 @@ public class UAlshTable<Key, Value> {
                 if (buckets[i].getKey().equals(k)) {
                     buckets[i].delete();
                     this.deletedKeys++;
+                    wasDeleted = true;
                     break;
                 }
             }
         }
 
-        if (primeIndex > DEFAULT_PRIME_INDEX && size() < 0.25 * primes[primeIndex])
+        if (wasDeleted && primeIndex > DEFAULT_PRIME_INDEX && size() < 0.25 * primes[primeIndex])
             resize(this.primeIndex - 1);
     }
 
