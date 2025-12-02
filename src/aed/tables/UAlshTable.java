@@ -104,7 +104,7 @@ public class UAlshTable<Key, Value> {
 
         table.put(2, 80);
         table.put(80, 2);
-        
+
         table.put(2, null);
 
         Iterable<Integer> iteravel = table.keys();
@@ -289,13 +289,15 @@ public class UAlshTable<Key, Value> {
 
         UAlshBucket<Key, Value>[] buckets = possibleBuckets(k);
 
-        if (min == 0) {
+        if (min == Integer.MAX_VALUE) {
             return;
         }
+
         for (int i = min - 1; i >= 0; i--) {
             if (buckets[i] != null && !buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
                 if (buckets[i].getKey().equals(k)) {
                     buckets[i].delete();
+                    
                     deletedKeys++;
                     size--;
 
@@ -305,7 +307,7 @@ public class UAlshTable<Key, Value> {
         }
 
         if (this.size < 0.25 * primes[primeIndex])
-            resize(--(this.primeIndex));
+            resize(this.primeIndex - 1);
     }
 
     public Iterable<Key> keys() {
