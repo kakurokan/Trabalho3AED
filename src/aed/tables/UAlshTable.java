@@ -236,21 +236,12 @@ public class UAlshTable<Key, Value> {
         fastPut(k, v, khc1, khc2);
     }
 
+    @SuppressWarnings("unchecked")
     private void fastPut(Key k, Value v, int khc1, int khc2) {
         if (this.size >= 0.85 * t1.length) {
             resize(primeIndex + 1);
         }
 
-        boolean wasAdded = fastPutHelper(k, v, khc1, khc2);
-        while (!wasAdded && primeIndex < primes.length - 1) {
-            resize(primeIndex + 1);
-            wasAdded = fastPutHelper(k, v, khc1, khc2);
-        }
-
-    }
-
-    @SuppressWarnings("unchecked")
-    private boolean fastPutHelper(Key k, Value v, int khc1, int khc2) {
         UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
         int sharedTable = 0;
         for (int i = 1; i <= 5; i++) {
@@ -270,8 +261,6 @@ public class UAlshTable<Key, Value> {
             if (bucket != null)
                 bucket.maxSharedTable = Math.max(bucket.maxSharedTable, sharedTable);
         }
-
-        return sharedTable != 0;
     }
 
     public void delete(Key k) {
