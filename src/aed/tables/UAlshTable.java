@@ -89,11 +89,11 @@ public class UAlshTable<Key, Value> {
         this.primeIndex = primeIndex;
         this.deletedKeys = 0;
 
-        this.t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX]];
-        this.t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 1]];
-        this.t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 2]];
-        this.t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 3]];
-        this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[DEFAULT_PRIME_INDEX - 4]];
+        this.t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex]];
+        this.t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 1]];
+        this.t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 2]];
+        this.t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 3]];
+        this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 4]];
     }
 
     private void resetMin() {
@@ -173,7 +173,6 @@ public class UAlshTable<Key, Value> {
         for (int i = 1; i <= 5; i++) {
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(k, i)];
             if (bucket == null) {
-                min = 0;
                 break;
             }
             buckets[i - 1] = bucket;
