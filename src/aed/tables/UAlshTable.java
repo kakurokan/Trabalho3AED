@@ -11,11 +11,12 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
     int maxSharedTable;
     int hc1;
     int hc2;
-    private boolean is_deleted;
+    boolean is_deleted;
 
-    UAlshBucket(Value value, Key key, Function<Key, Integer> hc2) {
+    UAlshBucket(Value value, Key key, Function<Key, Integer> hc2, int maxSharedTable) {
         this.value = value;
         this.key = key;
+        this.maxSharedTable = maxSharedTable;
         is_deleted = false;
         this.hc1 = key.hashCode();
         this.hc2 = hc2.apply(key);
@@ -97,22 +98,64 @@ public class UAlshTable<Key, Value> {
     }
 
     public static void main(String[] args) {
-        UAlshTable<Integer, Integer> table = new UAlshTable<>(Object::hashCode);
+        System.out.println("=== TESTE DE LOAD FACTOR E RESIZING ===");
 
-        for (int i = 0; i < 10; i++)
-            table.fastPut(i, i + 1);
+        // 1. Inicialização
+        // Capacidade inicial esperada: 37 + 17 + 11 + 7 + 5 = 77
+        UAlshTable<Integer, String> table = new UAlshTable<>(Object::hashCode);
 
-        table.put(2, 80);
-        table.put(80, 2);
+        printStats(table, "Estado Inicial (Vazia)");
 
-        table.put(2, null);
+        // 2. Preencher até perto do limite de resize
+        // Limite de resize é 0.85 * T1 (37) = 31.45.
+        // Vamos inserir 31 elementos. Não deve fazer resize ainda.
+        System.out.println(">>> A inserir 31 elementos...");
+        for (int i = 0; i < 31; i++) {
+            table.put(i, "Val-" + i);
+        }
 
-        Iterable<Integer> iteravel = table.keys();
+        // O Load Factor deve ser aprox 31 / 77 = 0.4025
+        printStats(table, "Após 31 inserções (Pré-Resize)");
 
-        for (Integer key : iteravel)
-            System.out.println("key: " + key + " value: " + table.get(key));
+        // 3. Forçar o Resize
+        // Ao inserir o 32.º elemento, deve passar o threshold (31.45) e duplicar.
+        // Nova T1 será 79. Capacidade total estimada: 79+37+17+11+7 = 151.
+        System.out.println(">>> A inserir mais 5 elementos (Total 36) - DEVE OCORRER RESIZE...");
+        for (int i = 31; i < 36; i++) {
+            table.put(i, "Val-" + i);
+        }
 
-        System.out.println("size: " + table.size());
+        // O Load Factor deve CAIR drasticamente porque a capacidade aumentou.
+        // Esperado: Size 36 / Cap 151 = ~0.238
+        printStats(table, "Após 36 inserções (Pós-Resize)");
+
+        // 4. Testar consistência dos dados
+        System.out.println("Verificação rápida: get(10) = " + table.get(10));
+        System.out.println("Verificação rápida: get(35) = " + table.get(35));
+        System.out.println();
+
+        // 5. Testar Downsizing (Encolher)
+        // Ocorre quando size < 0.25 * T1.
+        // Atual T1 = 79. Threshold = 19.75.
+        // Temos 36 elementos. Vamos apagar 20, ficando com 16.
+        System.out.println(">>> A apagar 20 elementos para forçar Downsizing...");
+        for (int i = 0; i < 20; i++) {
+            table.delete(i);
+        }
+
+        // Agora devemos ter voltado à capacidade original (77) ou perto disso,
+        // pois o tamanho (16) é menor que 19.75.
+        printStats(table, "Após remoção massiva (Downsizing)");
+    }
+
+    // Método auxiliar para imprimir bonito
+    private static void printStats(UAlshTable<?, ?> table, String fase) {
+        System.out.println("--- " + fase + " ---");
+        System.out.println("Size (elementos): " + table.size());
+        System.out.println("Main Capacity (T1): " + table.getMainCapacity());
+        System.out.println("Total Capacity: " + table.getTotalCapacity());
+        System.out.printf("Load Factor: %.4f (%.2f%%)\n", table.getLoadFactor(), table.getLoadFactor() * 100);
+        System.out.println("------------------------------------------------\n");
     }
 
     private void resetMin() {
@@ -147,7 +190,7 @@ public class UAlshTable<Key, Value> {
     }
 
     private void resize(int new_primeIndex) {
-        if (new_primeIndex < DEFAULT_PRIME_INDEX || new_primeIndex >= primes.length) return;
+        if (new_primeIndex >= primes.length) return;
 
         UAlshTable<Key, Value> new_table = new UAlshTable<>(this.hc2, new_primeIndex);
 
@@ -226,7 +269,6 @@ public class UAlshTable<Key, Value> {
             return;
         }
 
-
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
@@ -238,13 +280,20 @@ public class UAlshTable<Key, Value> {
         }
 
         for (int i = min - 1; i >= 0; i--) {
-            if (buckets[i] != null && !buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
+            if ((buckets[i] != null && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2)) {
                 if (buckets[i].getKey().equals(k)) {
+                    if (buckets[i].isDeleted()) {
+                        this.deletedKeys--;
+                        this.size++;
+                        buckets[i].is_deleted = false;
+                    }
                     buckets[i].value = v;
                     return;
                 }
             }
         }
+
+        fastPut(k, v);
     }
 
     @SuppressWarnings("unchecked")
@@ -259,21 +308,26 @@ public class UAlshTable<Key, Value> {
         for (int i = 1; i <= 5; i++) {
             int UAsh = UAsh(k, i);
             UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(i);
-            buckets[i - 1] = table[UAsh];
 
-            if (table[UAsh] == null || table[UAsh].isDeleted()) {
-
-                if (table[UAsh] != null && table[UAsh].isDeleted()) {
-                    this.deletedKeys--;
-                }
-
-                getSubTable(i)[UAsh] = new UAlshBucket<>(v, k, hc2);
+            if (table[UAsh] == null) {
+                getSubTable(i)[UAsh] = new UAlshBucket<>(v, k, hc2, 0);
                 buckets[i - 1] = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh];
                 sharedTable = i;
 
+                buckets[i - 1] = table[UAsh];
                 this.size++;
                 break;
+            } else if (table[UAsh].isDeleted()) {
+                getSubTable(i)[UAsh] = new UAlshBucket<>(v, k, hc2, table[UAsh].getMaxSharedTable());
+
+                buckets[i - 1] = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh];
+
+                sharedTable = i;
+                this.size++;
+                this.deletedKeys--;
+                break;
             }
+            buckets[i - 1] = table[UAsh];
         }
         for (UAlshBucket<Key, Value> bucket : buckets) {
             if (bucket != null)
@@ -296,15 +350,15 @@ public class UAlshTable<Key, Value> {
                 if (buckets[i].getKey().equals(k)) {
                     buckets[i].delete();
 
-                    deletedKeys++;
-                    size--;
+                    this.deletedKeys++;
+                    this.size--;
 
                     break;
                 }
             }
         }
 
-        if (this.size < 0.25 * primes[primeIndex])
+        if (primeIndex > DEFAULT_PRIME_INDEX && (this.size < 0.25 * primes[primeIndex]))
             resize(this.primeIndex - 1);
     }
 
