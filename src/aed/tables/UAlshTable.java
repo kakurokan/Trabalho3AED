@@ -103,9 +103,12 @@ public class UAlshTable<Key, Value> {
             table.fastPut(i, i + 1);
 
         table.put(2, 80);
+        table.put(80, 2);
 
+        System.out.println(table.get(100));
         System.out.println(table.get(2));
         System.out.println(table.get(3));
+        System.out.println(table.getLoadFactor());
     }
 
     private void resetMin() {
@@ -113,7 +116,7 @@ public class UAlshTable<Key, Value> {
     }
 
     public int size() {
-        return size;
+        return this.size;
     }
 
     private int UAsh(Key k, int i) {
@@ -121,22 +124,22 @@ public class UAlshTable<Key, Value> {
     }
 
     public int getMainCapacity() {
-        return getSubTable(1).length;
+        return this.primeIndex;
     }
 
     public int getTotalCapacity() {
         int sum = 0;
-        for (int i = 1; i <= 5; i++)
-            sum += getSubTable(i).length;
+        for (int i = 0; i < 5; i++)
+            sum += primes[primeIndex - i];
         return sum;
     }
 
     public float getLoadFactor() {
-        return size / (float) getTotalCapacity();
+        return this.size / (float) getTotalCapacity();
     }
 
     public int getDeletedNotRemoved() {
-        return deletedKeys;
+        return this.deletedKeys;
     }
 
     private void resize(int new_primeIndex) {
@@ -200,6 +203,9 @@ public class UAlshTable<Key, Value> {
 
         UAlshBucket<Key, Value>[] buckets = possibleBuckets(k);
 
+        if (min == Integer.MAX_VALUE)
+            return null;
+
         for (int i = min - 1; i >= 0; i--) {
             UAlshBucket<Key, Value> bucket = buckets[i];
             if (bucket != null && !bucket.isDeleted() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
@@ -211,6 +217,12 @@ public class UAlshTable<Key, Value> {
     }
 
     public void put(Key k, Value v) {
+        if (v == null) {
+            delete(k);
+            return;
+        }
+
+
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
@@ -288,8 +300,8 @@ public class UAlshTable<Key, Value> {
             }
         }
 
-        if (size < primes[primeIndex] / 4)
-            resize(--primeIndex);
+        if (this.size < 0.25 * primes[primeIndex])
+            resize(--(this.primeIndex));
     }
 
     public Iterable<Key> keys() {
