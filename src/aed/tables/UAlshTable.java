@@ -245,8 +245,6 @@ public class UAlshTable<Key, Value> {
                 }
             }
         }
-
-        fastPut(k, v);
     }
 
     @SuppressWarnings("unchecked")
@@ -260,27 +258,27 @@ public class UAlshTable<Key, Value> {
 
         for (int i = 1; i <= 5; i++) {
             int UAsh = UAsh(k, i);
+            UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(i);
+            buckets[i - 1] = table[UAsh];
 
-            if (getSubTable(i)[UAsh] == null || getSubTable(i)[UAsh].isDeleted()) {
+            if (table[UAsh] == null || table[UAsh].isDeleted()) {
 
-                if (getSubTable(i)[UAsh] != null && getSubTable(i)[UAsh].isDeleted()) {
+                if (table[UAsh] != null && table[UAsh].isDeleted()) {
                     this.deletedKeys--;
                 }
 
                 getSubTable(i)[UAsh] = new UAlshBucket<>(v, k, hc2);
                 buckets[i - 1] = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh];
                 sharedTable = i;
+
+                this.size++;
                 break;
-            } else {
-                buckets[i - 1] = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh];
             }
         }
         for (UAlshBucket<Key, Value> bucket : buckets) {
             if (bucket != null)
                 bucket.maxSharedTable = Math.max(bucket.maxSharedTable, sharedTable);
         }
-
-        this.size++;
     }
 
     public void delete(Key k) {
@@ -297,7 +295,7 @@ public class UAlshTable<Key, Value> {
             if (buckets[i] != null && !buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
                 if (buckets[i].getKey().equals(k)) {
                     buckets[i].delete();
-                    
+
                     deletedKeys++;
                     size--;
 
