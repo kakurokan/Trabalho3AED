@@ -226,6 +226,10 @@ public class UAlshTable<Key, Value> {
             }
         }
 
+        if (this.size >= 0.85 * primes[primeIndex]) {
+            resize(primeIndex + 1);
+        }
+
         fastPut(k, v, khc1, khc2);
     }
 
@@ -233,32 +237,45 @@ public class UAlshTable<Key, Value> {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
+        if (this.size >= 0.85 * primes[primeIndex]) {
+            resize(primeIndex + 1);
+        }
+
         fastPut(k, v, khc1, khc2);
     }
 
     @SuppressWarnings("unchecked")
     private void fastPut(Key k, Value v, int khc1, int khc2) {
-        if (this.size >= 0.85 * primes[primeIndex]) {
-            resize(primeIndex + 1);
-        }
-
         boolean wasAdded = false;
 
         UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
         int sharedTable = 0;
         for (int i = 1; i <= 5; i++) {
-            int UAsh = UAsh(i, khc1, khc2);
+            int uash = UAsh(i, khc1, khc2);
             UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(i);
 
-            if (table[UAsh] == null) {
-                table[UAsh] = new UAlshBucket<>(v, k, khc1, khc2, 0);
-                buckets[i - 1] = table[UAsh];
+            if (table[uash] == null) {
+                table[uash] = new UAlshBucket<>(v, k, khc1, khc2, 0);
+                buckets[i - 1] = table[uash];
+
                 sharedTable = i;
                 this.size++;
                 wasAdded = true;
                 break;
+            } else if (table[uash].isDeleted()) {
+                table[uash].key = k;
+                table[uash].value = v;
+                table[uash].hc1 = khc1;
+                table[uash].hc2 = khc2;
+
+                buckets[i - 1] = table[uash];
+                sharedTable = i;
+                this.deletedKeys--;
+                wasAdded = true;
+                break;
             }
-            buckets[i - 1] = table[UAsh];
+
+            buckets[i - 1] = table[uash];
         }
 
         if (!wasAdded) {
