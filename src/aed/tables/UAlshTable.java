@@ -215,7 +215,7 @@ public class UAlshTable<Key, Value> {
     }
 
     public boolean containsKey(Key k) {
-        return findBucket(k, k.hashCode(), hc2.apply(k)) != null;
+        return get(k) != null;
     }
 
     @SuppressWarnings("unchecked")
@@ -312,9 +312,10 @@ public class UAlshTable<Key, Value> {
             buckets.add((UAlshBucket<Key, Value>) getSubTable(i)[hash]);
         }
 
-        if (primeIndex < primes.length - 1)
+        if (primeIndex < primes.length - 1) {
             resize(primeIndex + 1);
-        fastPut(k, v, khc1, khc2);
+            fastPut(k, v, khc1, khc2);
+        }
     }
 
     public void delete(Key k) {
