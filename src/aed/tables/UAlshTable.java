@@ -1,5 +1,6 @@
 package aed.tables;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
@@ -57,7 +58,6 @@ public class UAlshTable<Key, Value> {
     private final int DEFAULT_PRIME_INDEX = 4;
     private final Function<Key, Integer> hc2;
     int primeIndex;
-    private int min;
     private int size;
     private int deletedKeys;
     //Tabelas
@@ -95,10 +95,6 @@ public class UAlshTable<Key, Value> {
         this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 4]];
     }
 
-    private void resetMin() {
-        min = Integer.MAX_VALUE;
-    }
-
     public int size() {
         return this.size - this.deletedKeys;
     }
@@ -128,11 +124,6 @@ public class UAlshTable<Key, Value> {
     }
 
     private void resize(int new_primeIndex) {
-        if (new_primeIndex > primeIndex)
-            new_primeIndex = Math.min(new_primeIndex, primes.length - 1);
-        else
-            new_primeIndex = Math.max(new_primeIndex, DEFAULT_PRIME_INDEX);
-
         UAlshTable<Key, Value> new_table = new UAlshTable<>(this.hc2, new_primeIndex);
 
         for (int i = 1; i <= 5; i++) {
@@ -170,8 +161,8 @@ public class UAlshTable<Key, Value> {
     }
 
     @SuppressWarnings("unchecked")
-    private UAlshBucket<Key, Value>[] possibleBuckets(int khc1, int khc2) {
-        resetMin();
+    private UAlshBucket<Key, Value> findBucket(Key k, int khc1, int khc2) {
+        int z = Integer.MAX_VALUE;
         UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
 
         for (int i = 1; i <= 5; i++) {
@@ -179,27 +170,31 @@ public class UAlshTable<Key, Value> {
             if (bucket == null) {
                 break;
             }
+            z = Math.min(z, bucket.getMaxSharedTable());
             buckets[i - 1] = bucket;
-            min = Math.min(min, bucket.getMaxSharedTable());
         }
 
-        if (min == Integer.MAX_VALUE)
-            min = 0;
-        return buckets;
+        if (z == Integer.MAX_VALUE || z == 0)
+            return null;
+
+        for (int i = z; i > 0; i--) {
+            UAlshBucket<Key, Value> bucket = buckets[i - 1];
+            if (bucket != null && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
+                if (bucket.getKey().equals(k)) return bucket;
+            }
+        }
+
+        return null;
     }
 
     public Value get(Key k) {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
-        UAlshBucket<Key, Value>[] buckets = possibleBuckets(khc1, khc2);
+        UAlshBucket<Key, Value> bucket = findBucket(k, khc1, khc2);
 
-        for (int i = min - 1; i >= 0; i--) {
-            UAlshBucket<Key, Value> bucket = buckets[i];
-            if (bucket != null && !bucket.isDeleted() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
-                if (bucket.getKey().equals(k)) return bucket.getValue();
-            }
-        }
+        if (bucket != null && !bucket.isDeleted())
+            return bucket.getValue();
 
         return null;
     }
@@ -212,43 +207,36 @@ public class UAlshTable<Key, Value> {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
-        UAlshBucket<Key, Value>[] buckets = possibleBuckets(khc1, khc2);
+        UAlshBucket<Key, Value> bucket = findBucket(k, khc1, khc2);
 
-        for (int i = min - 1; i >= 0; i--) {
-            if ((buckets[i] != null && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2)) {
-                if (buckets[i].getKey().equals(k)) {
-                    if (buckets[i].isDeleted()) {
-                        this.deletedKeys--;
-                    }
-                    buckets[i].value = v;
-                    return;
-                }
+        if (bucket == null) {
+            if (primeIndex < primes.length - 1 && this.size >= 0.85 * primes[primeIndex]) {
+                resize(primeIndex + 1);
             }
+            fastPut(k, v, khc1, khc2);
+
+            return;
         }
 
-        if (this.size >= 0.85 * primes[primeIndex]) {
-            resize(primeIndex + 1);
-        }
-
-        fastPut(k, v, khc1, khc2);
+        if (bucket.isDeleted())
+            this.deletedKeys--;
+        bucket.value = v;
     }
 
     public void fastPut(Key k, Value v) {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
-        if (this.size >= 0.85 * primes[primeIndex]) {
+        if (primeIndex < primes.length - 1 && this.size >= 0.85 * primes[primeIndex]) {
             resize(primeIndex + 1);
         }
 
         fastPut(k, v, khc1, khc2);
     }
 
-    @SuppressWarnings("unchecked")
     private void fastPut(Key k, Value v, int khc1, int khc2) {
-        boolean wasAdded = false;
 
-        UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
+        ArrayList<UAlshBucket<Key, Value>> buckets = new ArrayList<>();
         int sharedTable = 0;
         for (int i = 1; i <= 5; i++) {
             int uash = UAsh(i, khc1, khc2);
@@ -256,60 +244,36 @@ public class UAlshTable<Key, Value> {
 
             if (table[uash] == null) {
                 table[uash] = new UAlshBucket<>(v, k, khc1, khc2, 0);
-                buckets[i - 1] = table[uash];
+                buckets.add(table[uash]);
 
                 sharedTable = i;
                 this.size++;
-                wasAdded = true;
-                break;
-            } else if (table[uash].isDeleted()) {
-                table[uash].key = k;
-                table[uash].value = v;
-                table[uash].hc1 = khc1;
-                table[uash].hc2 = khc2;
 
-                buckets[i - 1] = table[uash];
-                sharedTable = i;
-                this.deletedKeys--;
-                wasAdded = true;
+                for (UAlshBucket<Key, Value> bucket : buckets) {
+                    bucket.maxSharedTable = Math.max(bucket.maxSharedTable, sharedTable);
+                }
                 break;
             }
-
-            buckets[i - 1] = table[uash];
-        }
-
-        if (!wasAdded) {
-            resize(primeIndex + 1);
-            fastPut(k, v, khc1, khc2);
-            return;
-        }
-
-        for (UAlshBucket<Key, Value> bucket : buckets) {
-            if (bucket != null)
-                bucket.maxSharedTable = Math.max(bucket.maxSharedTable, sharedTable);
+            buckets.add(table[uash]);
         }
     }
 
     public void delete(Key k) {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
-        boolean wasDeleted = false;
 
-        UAlshBucket<Key, Value>[] buckets = possibleBuckets(khc1, khc2);
+        UAlshBucket<Key, Value> bucket = findBucket(k, khc1, khc2);
 
-        for (int i = min - 1; i >= 0; i--) {
-            if (buckets[i] != null && !buckets[i].isDeleted() && buckets[i].hc1 == khc1 && buckets[i].hc2 == khc2) {
-                if (buckets[i].getKey().equals(k)) {
-                    buckets[i].delete();
-                    this.deletedKeys++;
-                    wasDeleted = true;
-                    break;
-                }
-            }
+        if (bucket == null)
+            return;
+
+        if (!bucket.isDeleted()) {
+            bucket.delete();
+            this.deletedKeys++;
+
+            if (primeIndex > DEFAULT_PRIME_INDEX && size() < 0.25 * primes[primeIndex])
+                resize(this.primeIndex - 1);
         }
-
-        if (wasDeleted && primeIndex > DEFAULT_PRIME_INDEX && size() < 0.25 * primes[primeIndex])
-            resize(this.primeIndex - 1);
     }
 
     public Iterable<Key> keys() {
