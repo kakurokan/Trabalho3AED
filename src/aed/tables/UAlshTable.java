@@ -85,6 +85,64 @@ public class UAlshTable<Key, Value> {
         initTables(primeIndex);
     }
 
+    public static void main(String[] args) {
+        UAlshTable<Integer, String> table = new UAlshTable<>(Object::hashCode);
+        table.fastPut(1, "Léo");
+        table.delete(1);
+        table.put(1, "Bia");
+        table.put(1, "Leandro");
+        table.put(5, "Beatriz");
+
+        table.printStructureWithIterator();
+    }
+
+    public void printStructureWithIterator() {
+        System.out.println("\n=== Hash Table (Via Iterador) ===");
+        System.out.println("-----------------------------------------------------------------------");
+        // Formatação: Tabela | Índice | MaxShared | Key | Value
+        System.out.printf("| %-3s | %-8s | %-9s | %-20s | %-15s |%n", "Tab", "Index", "MaxShared", "Key", "Value");
+        System.out.println("-----------------------------------------------------------------------");
+
+        // 1. UTILIZA O ITERADOR JÁ CRIADO
+        for (Key k : this.keys()) {
+
+            // 2. Recupera os dados internos para manter o print detalhado
+            int khc1 = k.hashCode();
+            int khc2 = hc2.apply(k);
+            UAlshBucket<Key, Value> bucket = findBucket(k, khc1, khc2);
+
+            if (bucket != null) {
+                // Pequeno cálculo para descobrir visualmente onde a chave está (já que o iterador esconde isso)
+                int foundTable = -1;
+                int foundIndex = -1;
+
+                // Verifica em qual tabela o hash cai
+                for (int i = 1; i <= 5; i++) {
+                    int idx = UAsh(i, khc1, khc2);
+                    // Verifica se o bucket nesse endereço é o mesmo objeto que encontramos
+                    if (getSubTable(i)[idx] == bucket) {
+                        foundTable = i;
+                        foundIndex = idx;
+                        break;
+                    }
+                }
+
+                // 3. Imprime a linha formatada
+                System.out.printf("| %-3d | %-8d | %-9d | %-20s | %-15s |%n",
+                        foundTable,
+                        foundIndex,
+                        bucket.getMaxSharedTable(),
+                        k.toString(),
+                        bucket.getValue().toString()
+                );
+            }
+        }
+
+        System.out.println("-----------------------------------------------------------------------");
+        System.out.println("Total Size: " + this.size()); // size() já desconta os deletados
+        System.out.println("===============================\n");
+    }
+
     @SuppressWarnings("unchecked")
     private void initTables(int primeIndex) {
 
@@ -157,7 +215,7 @@ public class UAlshTable<Key, Value> {
     }
 
     public boolean containsKey(Key k) {
-        return get(k) != null;
+        return findBucket(k, k.hashCode(), hc2.apply(k)) != null;
     }
 
     @SuppressWarnings("unchecked")
@@ -235,27 +293,28 @@ public class UAlshTable<Key, Value> {
     }
 
     private void fastPut(Key k, Value v, int khc1, int khc2) {
-
         ArrayList<UAlshBucket<Key, Value>> buckets = new ArrayList<>();
-        int sharedTable = 0;
+
         for (int i = 1; i <= 5; i++) {
-            int uash = UAsh(i, khc1, khc2);
-            UAlshBucket<Key, Value>[] table = (UAlshBucket<Key, Value>[]) getSubTable(i);
+            int hash = UAsh(i, khc1, khc2);
 
-            if (table[uash] == null) {
-                table[uash] = new UAlshBucket<>(v, k, khc1, khc2, 0);
-                buckets.add(table[uash]);
+            if (getSubTable(i)[hash] == null) {
+                getSubTable(i)[hash] = new UAlshBucket<>(v, k, khc1, khc2, i);
 
-                sharedTable = i;
+                for (UAlshBucket<Key, Value> b : buckets) {
+                    b.maxSharedTable = Math.max(b.getMaxSharedTable(), i);
+                }
+
                 this.size++;
 
-                for (UAlshBucket<Key, Value> bucket : buckets) {
-                    bucket.maxSharedTable = Math.max(bucket.maxSharedTable, sharedTable);
-                }
-                break;
+                return;
             }
-            buckets.add(table[uash]);
+            buckets.add((UAlshBucket<Key, Value>) getSubTable(i)[hash]);
         }
+
+        if (primeIndex < primes.length - 1)
+            resize(primeIndex + 1);
+        fastPut(k, v, khc1, khc2);
     }
 
     public void delete(Key k) {
