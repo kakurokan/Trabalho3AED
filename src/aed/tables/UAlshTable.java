@@ -184,7 +184,7 @@ public class UAlshTable<Key, Value> {
         }
 
         if (min == Integer.MAX_VALUE)
-            min = -1;
+            min = 0;
         return buckets;
     }
 
