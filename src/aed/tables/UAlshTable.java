@@ -3,6 +3,7 @@ package aed.tables;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.function.Function;
 
 class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
@@ -37,7 +38,7 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
 
     @Override
     public boolean isEmpty() {
-        return (key == null || isDeleted());
+        return isDeleted();
     }
 
     @Override
@@ -57,7 +58,7 @@ public class UAlshTable<Key, Value> {
     private static final int[] primes = {5, 7, 11, 17, 37, 79, 163, 331, 673, 1361, 2729, 5471, 10949, 21911, 43853, 87719, 175447, 350899, 701819, 1403641, 2807303, 5614657, 11229331, 22458671, 44917381, 89834777, 179669557};
     private final int DEFAULT_PRIME_INDEX = 4;
     private final Function<Key, Integer> hc2;
-    int primeIndex;
+    private int primeIndex;
     private int size;
     private int deletedKeys;
     //Tabelas
@@ -70,7 +71,7 @@ public class UAlshTable<Key, Value> {
     public UAlshTable(Function<Key, Integer> hc2) {
         this.hc2 = hc2;
         this.size = 0;
-        this.primeIndex = 4;
+        this.primeIndex = DEFAULT_PRIME_INDEX;
         this.deletedKeys = 0;
 
         initTables(DEFAULT_PRIME_INDEX);
@@ -86,14 +87,25 @@ public class UAlshTable<Key, Value> {
     }
 
     public static void main(String[] args) {
-        UAlshTable<Integer, String> table = new UAlshTable<>(Object::hashCode);
-        table.fastPut(1, "Léo");
-        table.delete(1);
-        table.put(1, "Bia");
-        table.put(1, "Leandro");
-        table.put(5, "Beatriz");
+        UAlshTable<String, Integer> table = new UAlshTable<>(k -> (Integer) k.hashCode());
+        for (int i = 0; i < 100000; i++)
+            table.put(table.getRandomString(), (Integer) i);
+
+        for (int i = 0; i < 1000; i++)
+            table.delete(table.getRandomString());
 
         table.printStructureWithIterator();
+    }
+
+    protected String getRandomString() {
+        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!?$%&";
+        StringBuilder salt = new StringBuilder();
+        Random rnd = new Random();
+        while (salt.length() < 18) { // length of the random string.
+            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
+            salt.append(SALTCHARS.charAt(index));
+        }
+        return salt.toString();
     }
 
     public void printStructureWithIterator() {
@@ -133,7 +145,7 @@ public class UAlshTable<Key, Value> {
                         foundIndex,
                         bucket.getMaxSharedTable(),
                         k.toString(),
-                        bucket.getValue().toString()
+                        String.valueOf(bucket.getValue())
                 );
             }
         }
@@ -158,7 +170,7 @@ public class UAlshTable<Key, Value> {
     }
 
     private int UAsh(int i, int kch1, int kch2) {
-        int h = ((kch1 + (i * kch2)) & 0x7fffffff);
+        int h = (kch1 + (i * kch2)) & 0x7fffffff;
         return h % getSubTable(i).length;
     }
 
@@ -268,11 +280,10 @@ public class UAlshTable<Key, Value> {
         UAlshBucket<Key, Value> bucket = findBucket(k, khc1, khc2);
 
         if (bucket == null) {
-            if (primeIndex < primes.length - 1 && 20 * this.size >= 17 * primes[primeIndex]) {
+            if (primeIndex < primes.length - 1 && 20 * this.size > 17 * primes[primeIndex]) {
                 resize(primeIndex + 1);
             }
             fastPut(k, v, khc1, khc2);
-
             return;
         }
 
@@ -285,7 +296,7 @@ public class UAlshTable<Key, Value> {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
-        if (primeIndex < primes.length - 1 && 20 * this.size >= 17 * primes[primeIndex]) {
+        if (primeIndex < primes.length - 1 && 20 * this.size > 17 * primes[primeIndex]) {
             resize(primeIndex + 1);
         }
 
@@ -317,6 +328,7 @@ public class UAlshTable<Key, Value> {
             fastPut(k, v, khc1, khc2);
         }
     }
+
 
     public void delete(Key k) {
         int khc1 = k.hashCode();
