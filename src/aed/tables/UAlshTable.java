@@ -1,9 +1,6 @@
 package aed.tables;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Random;
+import java.util.*;
 import java.util.function.Function;
 
 class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
@@ -13,6 +10,9 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
     int maxSharedTable;
     int hc1;
     int hc2;
+
+    public UAlshBucket() {
+    }
 
     UAlshBucket(Value value, Key key, int khc1, int khc2, int maxSharedTable) {
         this.value = value;
@@ -38,7 +38,7 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
 
     @Override
     public boolean isEmpty() {
-        return isDeleted();
+        return key == null;
     }
 
     @Override
@@ -69,12 +69,7 @@ public class UAlshTable<Key, Value> {
     private UAlshBucket<Key, Value>[] t5;
 
     public UAlshTable(Function<Key, Integer> hc2) {
-        this.hc2 = hc2;
-        this.size = 0;
-        this.primeIndex = DEFAULT_PRIME_INDEX;
-        this.deletedKeys = 0;
-
-        initTables(DEFAULT_PRIME_INDEX);
+        this(hc2, 4);
     }
 
     private UAlshTable(Function<Key, Integer> hc2, int primeIndex) {
@@ -87,14 +82,22 @@ public class UAlshTable<Key, Value> {
     }
 
     public static void main(String[] args) {
-        UAlshTable<String, Integer> table = new UAlshTable<>(k -> (Integer) k.hashCode());
-        for (int i = 0; i < 100000; i++)
-            table.put(table.getRandomString(), (Integer) i);
+        UAlshTable<String, Integer> table = new UAlshTable<>(String::hashCode);
+        ArrayList<String> keys = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            String r = table.getRandomString();
+            table.put(r, i);
+            keys.add(r);
+        }
 
-        for (int i = 0; i < 1000; i++)
-            table.delete(table.getRandomString());
+        for (int i = 0; i < keys.size(); i++) {
+            Random random = new Random();
+            int index = random.nextInt(keys.size());
+            table.delete(keys.get(index));
+        }
 
         table.printStructureWithIterator();
+        System.out.println("Deleteds: " + table.getDeletedNotRemoved());
     }
 
     protected String getRandomString() {
@@ -157,13 +160,18 @@ public class UAlshTable<Key, Value> {
 
     @SuppressWarnings("unchecked")
     private void initTables(int primeIndex) {
-
         this.t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex]];
+        Arrays.fill(t1, new UAlshBucket<>());
         this.t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 1]];
+        Arrays.fill(t2, new UAlshBucket<>());
         this.t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 2]];
+        Arrays.fill(t3, new UAlshBucket<>());
         this.t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 3]];
+        Arrays.fill(t4, new UAlshBucket<>());
         this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 4]];
+        Arrays.fill(t5, new UAlshBucket<>());
     }
+
 
     public int size() {
         return this.size - this.deletedKeys;
@@ -199,7 +207,7 @@ public class UAlshTable<Key, Value> {
         for (int i = 1; i <= 5; i++) {
             UAlshBucket<Key, Value>[] sub_table = (UAlshBucket<Key, Value>[]) getSubTable(i);
             for (UAlshBucket<Key, Value> bucket : sub_table) {
-                if (bucket != null && !bucket.isDeleted()) {
+                if (!bucket.isEmpty() && !bucket.isDeleted()) {
                     new_table.fastPut(bucket.getKey(), bucket.getValue(), bucket.hc1, bucket.hc2);
                 }
             }
@@ -210,7 +218,7 @@ public class UAlshTable<Key, Value> {
         this.t3 = new_table.t3;
         this.t4 = new_table.t4;
         this.t5 = new_table.t5;
-        this.deletedKeys = 0;
+        this.deletedKeys = new_table.deletedKeys;
         this.size = new_table.size;
         this.primeIndex = new_table.primeIndex;
     }
@@ -237,7 +245,7 @@ public class UAlshTable<Key, Value> {
 
         for (int i = 1; i <= 5; i++) {
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(i, khc1, khc2)];
-            if (bucket == null) {
+            if (bucket.isEmpty()) {
                 break;
             }
             z = Math.min(z, bucket.getMaxSharedTable());
@@ -280,15 +288,16 @@ public class UAlshTable<Key, Value> {
         UAlshBucket<Key, Value> bucket = findBucket(k, khc1, khc2);
 
         if (bucket == null) {
-            if (primeIndex < primes.length - 1 && 20 * this.size > 17 * primes[primeIndex]) {
+            if (primeIndex < primes.length - 1 && 20L * size() >= 17L * primes[primeIndex]) {
                 resize(primeIndex + 1);
             }
             fastPut(k, v, khc1, khc2);
             return;
         }
 
-        if (bucket.isDeleted())
+        if (bucket.isDeleted()) {
             this.deletedKeys--;
+        }
         bucket.value = v;
     }
 
@@ -296,7 +305,7 @@ public class UAlshTable<Key, Value> {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
-        if (primeIndex < primes.length - 1 && 20 * this.size > 17 * primes[primeIndex]) {
+        if (primeIndex < primes.length - 1 && 20L * size() >= 17L * primes[primeIndex]) {
             resize(primeIndex + 1);
         }
 
@@ -309,7 +318,7 @@ public class UAlshTable<Key, Value> {
         for (int i = 1; i <= 5; i++) {
             int hash = UAsh(i, khc1, khc2);
 
-            if (getSubTable(i)[hash] == null) {
+            if (getSubTable(i)[hash].isEmpty()) {
                 getSubTable(i)[hash] = new UAlshBucket<>(v, k, khc1, khc2, i);
 
                 for (UAlshBucket<Key, Value> b : buckets) {
@@ -343,7 +352,7 @@ public class UAlshTable<Key, Value> {
             bucket.delete();
             this.deletedKeys++;
 
-            if (primeIndex > DEFAULT_PRIME_INDEX && 4 * size() < primes[primeIndex])
+            if (primeIndex > DEFAULT_PRIME_INDEX && 4L * size() < primes[primeIndex])
                 resize(this.primeIndex - 1);
         }
     }
@@ -371,7 +380,7 @@ public class UAlshTable<Key, Value> {
 
                 while (currentBucketIndex < table.length) {
                     UAlshBucket<Key, Value> tempBucket = table[currentBucketIndex++];
-                    if (tempBucket != null && !tempBucket.isDeleted()) {
+                    if (!tempBucket.isEmpty() && !tempBucket.isDeleted()) {
                         currentBucket = tempBucket;
                         return;
                     }
