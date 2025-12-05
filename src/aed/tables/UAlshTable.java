@@ -268,7 +268,7 @@ public class UAlshTable<Key, Value> {
         UAlshBucket<Key, Value> bucket = findBucket(k, khc1, khc2);
 
         if (bucket == null) {
-            if (primeIndex < primes.length - 1 && this.size >= 0.85 * primes[primeIndex]) {
+            if (primeIndex < primes.length - 1 && 20 * this.size >= 17 * primes[primeIndex]) {
                 resize(primeIndex + 1);
             }
             fastPut(k, v, khc1, khc2);
@@ -285,7 +285,7 @@ public class UAlshTable<Key, Value> {
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 
-        if (primeIndex < primes.length - 1 && this.size >= 0.85 * primes[primeIndex]) {
+        if (primeIndex < primes.length - 1 && 20 * this.size >= 17 * primes[primeIndex]) {
             resize(primeIndex + 1);
         }
 
@@ -331,7 +331,7 @@ public class UAlshTable<Key, Value> {
             bucket.delete();
             this.deletedKeys++;
 
-            if (primeIndex > DEFAULT_PRIME_INDEX && size() < 0.25 * primes[primeIndex])
+            if (primeIndex > DEFAULT_PRIME_INDEX && 4 * size() < primes[primeIndex])
                 resize(this.primeIndex - 1);
         }
     }
