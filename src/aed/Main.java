@@ -47,37 +47,27 @@ public class Main {
         System.out.println((double) tree_teste.maxDepth() / tree_teste.minDepth());
     }
 
-    public static void main(String[] args) {
-
-        Random random = new Random();
-        System.out.println("TESTE DE RACIO COM INSERÇÃO DECRESCENTE:");
-        for (int i = 0; i < 10; i++) {
-            testRacioDecrescente();
-        }
-
-        System.out.println("TESTE DE RACIO COM INSERÇÃO CRESCENTE:");
-        for (int i = 0; i < 10; i++) {
-            testRacioCrescente();
-        }
-
-        System.out.println("TESTE DE RACIO COM INSERÇÃO DE ELEMENTOS ALEATORIOS:");
-        for (int i = 0; i < 10; i++) {
-            testRacioAleatorio();
-        }
-        Consumer<UAlgTree<Integer, Integer>> testUalgTree = (tree) -> {
+    public static void testPesquisaAleatoria() {
+        System.out.print("TESTE PESQUISA ALEATÓRIA");
+        Consumer<UAlgTree<Integer, Integer>> getRandom = (tree) -> {
             Random r = new Random();
             int n = tree.size();
             for (int i = 0; i < n; i++) {
                 tree.get(r.nextInt(n));
             }
         };
-        TemporalAnalysisUtils.runDoublingRatioTest(Main::createUalgTree, testUalgTree, 4); //Teste de razão dobrada com logica de Pareto
-        Consumer<UAlgTree<Integer, Integer>> testUAlgTreePareto = (tree) -> {
+
+        TemporalAnalysisUtils.runDoublingRatioTest(Main::createUalgTree, getRandom, 10); //Teste de razão dobrada com logica de Pareto
+    }
+
+    public static void testUAlgTreePareto() {
+        System.out.print("TESTE PESQUISA DE PARETO");
+        Consumer<UAlgTree<Integer, Integer>> getPareto = (tree) -> {
             Random r = new Random();
             int n = tree.size();
             int temp = (int) (0.20 * n);
             for (int i = 0; i < n; i++) {
-                double v = r.nextDouble(0.0, 1.0);
+                double v = r.nextDouble();
                 if (v < 0.8) {
                     tree.get(r.nextInt(temp));
                 } else {
@@ -85,8 +75,31 @@ public class Main {
                 }
             }
         };
-        TemporalAnalysisUtils.runDoublingRatioTest(Main::createUalgTree, testUAlgTreePareto, 4); //Teste de razão dobrada com logica de Pareto
+        TemporalAnalysisUtils.runDoublingRatioTest(Main::createUalgTree, getPareto, 10); //Teste de razão dobrada com logica de Pareto
+    }
 
+    public static void main(String[] args) {
+/*
+        System.out.println("TESTE DE RACIO COM INSERÇÃO DE ELEMENTOS ALEATORIOS:");
+        for (int i = 1; i <= 10; i++) {
+            System.out.print("rácio #" + i + ": ");
+            testRacioAleatorio();
+        }
+
+        System.out.println("TESTE DE RACIO COM INSERÇÃO DECRESCENTE:");
+        for (int i = 1; i <= 10; i++) {
+            System.out.print("rácio #" + i + ": ");
+            testRacioDecrescente();
+        }
+
+        System.out.println("TESTE DE RACIO COM INSERÇÃO CRESCENTE:");
+        for (int i = 1; i <= 10; i++) {
+            System.out.print("rácio #" + i + ": ");
+            testRacioCrescente();
+        }
+*/
+
+        testUAlgTreePareto();
     }
 }
 

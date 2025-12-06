@@ -19,7 +19,7 @@ import java.util.function.UnaryOperator;
 public class TemporalAnalysisUtils {
 
     private static final int DEFAULT_TRIALS = 30;
-    private static final int DEFAULT_COMPLEXITY = 128;
+    private static final int DEFAULT_COMPLEXITY = 15000;
 
     public static <T> void runDoublingRatioTest(String testName, Function<Integer, T> exampleGenerator, Consumer<T> methodToTest, int initialComplexity, int iterations) {
         runDoublingRatioTest(testName, exampleGenerator, methodToTest, initialComplexity, iterations, DEFAULT_TRIALS);

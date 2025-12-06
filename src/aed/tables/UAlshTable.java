@@ -96,7 +96,7 @@ public class UAlshTable<Key, Value> {
             table.delete(keys.get(index));
         }
 
-        table.printStructureWithIterator();
+        table.printDebugStructure();
         System.out.println("Deleteds: " + table.getDeletedNotRemoved());
     }
 
@@ -111,51 +111,61 @@ public class UAlshTable<Key, Value> {
         return salt.toString();
     }
 
-    public void printStructureWithIterator() {
-        System.out.println("\n=== Hash Table (Via Iterador) ===");
-        System.out.println("-----------------------------------------------------------------------");
-        // Formatação: Tabela | Índice | MaxShared | Key | Value
-        System.out.printf("| %-3s | %-8s | %-9s | %-20s | %-15s |%n", "Tab", "Index", "MaxShared", "Key", "Value");
-        System.out.println("-----------------------------------------------------------------------");
+    public void printDebugStructure() {
+        System.out.println("\n################################################################");
+        System.out.println("###              ESTADO INTERNO DA UAlshTable                ###");
+        System.out.println("################################################################");
+        System.out.printf("Total Size (Ativos): %d | Deletados (Zombies): %d | Prime Index: %d%n",
+                this.size(), this.deletedKeys, this.primeIndex);
+        System.out.printf("Load Factor Global: %.2f%%%n", this.getLoadFactor() * 100);
+        System.out.println("----------------------------------------------------------------");
 
-        // 1. UTILIZA O ITERADOR JÁ CRIADO
-        for (Key k : this.keys()) {
+        for (int i = 1; i <= 5; i++) {
+            @SuppressWarnings("unchecked")
+            UAlshBucket<Key, Value>[] currentTable = (UAlshBucket<Key, Value>[]) getSubTable(i);
 
-            // 2. Recupera os dados internos para manter o print detalhado
-            int khc1 = k.hashCode();
-            int khc2 = hc2.apply(k);
-            UAlshBucket<Key, Value> bucket = findBucket(k, khc1, khc2);
+            int occupied = 0;
+            int zombies = 0;
 
-            if (bucket != null) {
-                // Pequeno cálculo para descobrir visualmente onde a chave está (já que o iterador esconde isso)
-                int foundTable = -1;
-                int foundIndex = -1;
-
-                // Verifica em qual tabela o hash cai
-                for (int i = 1; i <= 5; i++) {
-                    int idx = UAsh(i, khc1, khc2);
-                    // Verifica se o bucket nesse endereço é o mesmo objeto que encontramos
-                    if (getSubTable(i)[idx] == bucket) {
-                        foundTable = i;
-                        foundIndex = idx;
-                        break;
-                    }
+            // Pré-contagem para estatísticas da sub-tabela
+            for (UAlshBucket<Key, Value> b : currentTable) {
+                if (!b.isEmpty()) {
+                    if (b.isDeleted()) zombies++;
+                    else occupied++;
                 }
+            }
 
-                // 3. Imprime a linha formatada
-                System.out.printf("| %-3d | %-8d | %-9d | %-20s | %-15s |%n",
-                        foundTable,
-                        foundIndex,
-                        bucket.getMaxSharedTable(),
-                        k.toString(),
-                        String.valueOf(bucket.getValue())
-                );
+            System.out.printf("\n>>> SUB-TABELA T%d [Capacidade: %d | Ocupados: %d | Zombies: %d]%n",
+                    i, currentTable.length, occupied, zombies);
+            System.out.println("    Index | Status   | Hash1      | Hash2      | Key                  | Value");
+            System.out.println("    ------+----------+------------+------------+----------------------+-------");
+
+            boolean emptyTable = true;
+            for (int j = 0; j < currentTable.length; j++) {
+                UAlshBucket<Key, Value> bucket = currentTable[j];
+
+                if (!bucket.isEmpty()) { // Só imprime se tiver algo (ativo ou deletado)
+                    emptyTable = false;
+                    String status = bucket.isDeleted() ? "[DEL]" : "[ OK]";
+
+                    // Formatação segura para chaves/valores nulos se deletados
+                    String keyStr = (bucket.getKey() == null) ? "null" : bucket.getKey().toString();
+                    String valStr = (bucket.getValue() == null) ? "null" : bucket.getValue().toString();
+
+                    // Trunca strings muito longas para não quebrar a tabela visualmente
+                    if (keyStr.length() > 20) keyStr = keyStr.substring(0, 17) + "...";
+                    if (valStr.length() > 10) valStr = valStr.substring(0, 7) + "...";
+
+                    System.out.printf("    %5d | %s | %10d | %10d | %-20s | %s%n",
+                            j, status, bucket.hc1, bucket.hc2, keyStr, valStr);
+                }
+            }
+
+            if (emptyTable) {
+                System.out.println("    (Tabela Vazia)");
             }
         }
-
-        System.out.println("-----------------------------------------------------------------------");
-        System.out.println("Total Size: " + this.size()); // size() já desconta os deletados
-        System.out.println("===============================\n");
+        System.out.println("\n################################################################\n");
     }
 
     @SuppressWarnings("unchecked")
@@ -244,19 +254,16 @@ public class UAlshTable<Key, Value> {
 
         for (int i = 1; i <= 5; i++) {
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(i, khc1, khc2)];
-            if (bucket.isEmpty()) {
-                break;
-            }
             z = Math.min(z, bucket.getMaxSharedTable());
             buckets[i - 1] = bucket;
         }
 
-        if (z == Integer.MAX_VALUE || z == 0)
+        if (z == 0)
             return null;
 
         for (int i = z; i > 0; i--) {
             UAlshBucket<Key, Value> bucket = buckets[i - 1];
-            if (bucket != null && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
+            if (!bucket.isEmpty() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
                 if (bucket.getKey().equals(k)) return bucket;
             }
         }
@@ -314,29 +321,28 @@ public class UAlshTable<Key, Value> {
     @SuppressWarnings("unchecked")
     private void fastPut(Key k, Value v, int khc1, int khc2) {
         UAlshBucket<Key, Value>[] buckets = new UAlshBucket[5];
+        boolean wasAdded = false;
+        int index = 0;
 
         for (int i = 1; i <= 5; i++) {
             int hash = UAsh(i, khc1, khc2);
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[hash];
 
-            if (bucket.isEmpty()) {
+            if (bucket.isEmpty() && !wasAdded) {
                 bucket.initUAlshBucket(v, k, khc1, khc2, i);
-
-                buckets[i - 1] = bucket;
-
-                for (int j = 1; j < i; j++) {
-                    UAlshBucket<Key, Value> b = buckets[j - 1];
-                    b.maxSharedTable = Math.max(b.getMaxSharedTable(), i);
-                }
-
                 this.size++;
-
-                return;
+                index = i;
+                wasAdded = true;
             }
             buckets[i - 1] = bucket;
         }
 
-        if (primeIndex < primes.length - 1) {
+        if (wasAdded) {
+            for (int j = 1; j <= buckets.length; j++) {
+                UAlshBucket<Key, Value> b = buckets[j - 1];
+                b.maxSharedTable = Math.max(b.getMaxSharedTable(), index);
+            }
+        } else if (primeIndex < primes.length - 1) {
             resize(primeIndex + 1);
             fastPut(k, v, khc1, khc2);
         }
