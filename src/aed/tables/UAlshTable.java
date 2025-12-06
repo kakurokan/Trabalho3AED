@@ -14,7 +14,7 @@ class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
     public UAlshBucket() {
     }
 
-    UAlshBucket(Value value, Key key, int khc1, int khc2, int maxSharedTable) {
+    public void initUAlshBucket(Value value, Key key, int khc1, int khc2, int maxSharedTable) {
         this.value = value;
         this.key = key;
         this.maxSharedTable = maxSharedTable;
@@ -161,17 +161,16 @@ public class UAlshTable<Key, Value> {
     @SuppressWarnings("unchecked")
     private void initTables(int primeIndex) {
         this.t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex]];
-        Arrays.fill(t1, new UAlshBucket<>());
+        Arrays.setAll(t1, i -> new UAlshBucket<>());
         this.t2 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 1]];
-        Arrays.fill(t2, new UAlshBucket<>());
+        Arrays.setAll(t2, i -> new UAlshBucket<>());
         this.t3 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 2]];
-        Arrays.fill(t3, new UAlshBucket<>());
+        Arrays.setAll(t3, i -> new UAlshBucket<>());
         this.t4 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 3]];
-        Arrays.fill(t4, new UAlshBucket<>());
+        Arrays.setAll(t4, i -> new UAlshBucket<>());
         this.t5 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex - 4]];
-        Arrays.fill(t5, new UAlshBucket<>());
+        Arrays.setAll(t5, i -> new UAlshBucket<>());
     }
-
 
     public int size() {
         return this.size - this.deletedKeys;
@@ -312,16 +311,21 @@ public class UAlshTable<Key, Value> {
         fastPut(k, v, khc1, khc2);
     }
 
+    @SuppressWarnings("unchecked")
     private void fastPut(Key k, Value v, int khc1, int khc2) {
-        ArrayList<UAlshBucket<Key, Value>> buckets = new ArrayList<>();
+        UAlshBucket<Key, Value>[] buckets = new UAlshBucket[5];
 
         for (int i = 1; i <= 5; i++) {
             int hash = UAsh(i, khc1, khc2);
+            UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[hash];
 
-            if (getSubTable(i)[hash].isEmpty()) {
-                getSubTable(i)[hash] = new UAlshBucket<>(v, k, khc1, khc2, i);
+            if (bucket.isEmpty()) {
+                bucket.initUAlshBucket(v, k, khc1, khc2, i);
 
-                for (UAlshBucket<Key, Value> b : buckets) {
+                buckets[i - 1] = bucket;
+
+                for (int j = 1; j < i; j++) {
+                    UAlshBucket<Key, Value> b = buckets[j - 1];
                     b.maxSharedTable = Math.max(b.getMaxSharedTable(), i);
                 }
 
@@ -329,7 +333,7 @@ public class UAlshTable<Key, Value> {
 
                 return;
             }
-            buckets.add((UAlshBucket<Key, Value>) getSubTable(i)[hash]);
+            buckets[i - 1] = bucket;
         }
 
         if (primeIndex < primes.length - 1) {
