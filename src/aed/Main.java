@@ -81,10 +81,10 @@ public class Main {
     }
 
     public static String getRandomString() {
-        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!?$%&";
+        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         StringBuilder salt = new StringBuilder();
         Random rnd = new Random();
-        while (salt.length() < 18) { // length of the random string.
+        while (salt.length() < 10) { // length of the random string.
             int index = (int) (rnd.nextFloat() * SALTCHARS.length());
             salt.append(SALTCHARS.charAt(index));
         }
@@ -99,17 +99,68 @@ public class Main {
         return hash & 0x7fffffff;
     }
 
-    public static ArrayList<String> createRandomStringSet(int n) {
+    public static HashSet<String> createRandomStringSet(int n) {
         HashSet<String> keys = new HashSet<>();
         while (keys.size() < n)
             keys.add(getRandomString());
-        return new ArrayList<>(keys);
+        return keys;
+    }
+
+    public static void countCompareBySearchUAshTable() {
+        UAlshTable<String, Integer> table = new UAlshTable<>(Main::djb2HashString);
+        int size = 10000000;
+
+        HashSet<String> set = createRandomStringSet(size);
+        ArrayList<String> keys = new ArrayList<>(set);
+        ArrayList<Integer> numero_comp = new ArrayList<>();
+
+        for (int i = 0; i < size; i++) {
+            table.put(keys.get(i), i);
+        }
+        table.resetCount();
+
+        for (int i = 0; i < size; i++) {
+            table.get(keys.get(i));
+            numero_comp.add(table.nOfCompares);
+            table.resetCount();
+        }
+
+        double media = 0;
+        for (int i : numero_comp) {
+            media += i;
+        }
+        media /= size;
+
+        System.out.println("Número médio de comparações efetuadas por pesquisa de valores existentes: " + media);
+
+        ArrayList<String> nonKeys = new ArrayList<>();
+        while (nonKeys.size() < size) {
+            String k = getRandomString();
+            if (!set.contains(k))
+                nonKeys.add(k);
+        }
+
+        ArrayList<Integer> numero_comp2 = new ArrayList<>();
+        table.resetCount();
+        for (int i = 0; i < size; i++) {
+            table.get(nonKeys.get(i));
+            numero_comp2.add(table.nOfCompares);
+            table.resetCount();
+        }
+
+        media = 0;
+        for (int i : numero_comp2) {
+            media += i;
+        }
+        media /= size;
+
+        System.out.println("Número médio de comparações efetuadas por pesquisa de valores inexistentes: " + media);
     }
 
     public static void countCompareByInsertionUAshTable() {
         UAlshTable<String, Integer> table = new UAlshTable<>(Main::djb2HashString);
-        int size = 10000;
-        ArrayList<String> keys = createRandomStringSet(size);
+        int size = 1000000;
+        ArrayList<String> keys = new ArrayList<>(createRandomStringSet(size));
         ArrayList<Integer> numero_comp = new ArrayList<>();
 
         for (int i = 0; i < size; i++) {
@@ -127,7 +178,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-/*
+
         System.out.println("TESTE DE RACIO COM INSERÇÃO DE ELEMENTOS ALEATORIOS:");
         for (int i = 1; i <= 10; i++) {
             System.out.print("rácio #" + i + ": ");
@@ -145,9 +196,9 @@ public class Main {
             System.out.print("rácio #" + i + ": ");
             testRacioCrescente();
         }
-*/
 
         countCompareByInsertionUAshTable();
+        countCompareBySearchUAshTable();
     }
 }
 
