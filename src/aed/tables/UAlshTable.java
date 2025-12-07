@@ -56,7 +56,6 @@ public class UAlshTable<Key, Value> {
     //mudei de ideais relativamente aos primos iniciais, iremos usar
     //37, 17, 11, 7, e 5. Esta mudança não tem qualquer impacto significativo
     private static final int[] primes = {5, 7, 11, 17, 37, 79, 163, 331, 673, 1361, 2729, 5471, 10949, 21911, 43853, 87719, 175447, 350899, 701819, 1403641, 2807303, 5614657, 11229331, 22458671, 44917381, 89834777, 179669557};
-    private final int DEFAULT_PRIME_INDEX = 4;
     private final Function<Key, Integer> hc2;
     private int primeIndex;
     private int size;
@@ -121,6 +120,7 @@ public class UAlshTable<Key, Value> {
         System.out.println("----------------------------------------------------------------");
 
         for (int i = 1; i <= 5; i++) {
+            @SuppressWarnings("unchecked")
             UAlshBucket<Key, Value>[] currentTable = (UAlshBucket<Key, Value>[]) getSubTable(i);
 
             int occupied = 0;
@@ -246,22 +246,18 @@ public class UAlshTable<Key, Value> {
         return get(k) != null;
     }
 
-    @SuppressWarnings("unchecked")
     private UAlshBucket<Key, Value> findBucket(Key k, int khc1, int khc2) {
         int z = Integer.MAX_VALUE;
-        UAlshBucket<Key, Value>[] buckets = (UAlshBucket<Key, Value>[]) new UAlshBucket[5];
 
         for (int i = 1; i <= 5; i++) {
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(i, khc1, khc2)];
             z = Math.min(z, bucket.getMaxSharedTable());
-            buckets[i - 1] = bucket;
+            if (z == 0)
+                return null;
         }
 
-        if (z == 0)
-            return null;
-
         for (int i = z; i > 0; i--) {
-            UAlshBucket<Key, Value> bucket = buckets[i - 1];
+            UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(i, khc1, khc2)];
             if (!bucket.isEmpty() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
                 if (bucket.getKey().equals(k)) return bucket;
             }
@@ -317,9 +313,7 @@ public class UAlshTable<Key, Value> {
         fastPut(k, v, khc1, khc2);
     }
 
-    @SuppressWarnings("unchecked")
     private void fastPut(Key k, Value v, int khc1, int khc2) {
-        UAlshBucket<Key, Value>[] buckets = new UAlshBucket[5];
         boolean wasAdded = false;
         int index = 0;
 
@@ -327,19 +321,21 @@ public class UAlshTable<Key, Value> {
             int hash = UAsh(i, khc1, khc2);
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[hash];
 
-            if (bucket.isEmpty() && !wasAdded) {
+            if (bucket.isEmpty()) {
                 bucket.initUAlshBucket(v, k, khc1, khc2, i);
                 this.size++;
                 index = i;
                 wasAdded = true;
+                break;
             }
-            buckets[i - 1] = bucket;
         }
 
         if (wasAdded) {
-            for (int j = 1; j <= buckets.length; j++) {
-                UAlshBucket<Key, Value> b = buckets[j - 1];
-                b.maxSharedTable = Math.max(b.getMaxSharedTable(), index);
+            for (int j = 1; j <= 5; j++) {
+                UAlshBucket<Key, Value> b = (UAlshBucket<Key, Value>) getSubTable(j)[UAsh(j, khc1, khc2)];
+                if (index > b.maxSharedTable) {
+                    b.maxSharedTable = index;
+                }
             }
         } else if (primeIndex < primes.length - 1) {
             resize(primeIndex + 1);
@@ -361,7 +357,7 @@ public class UAlshTable<Key, Value> {
             bucket.delete();
             this.deletedKeys++;
 
-            if (primeIndex > DEFAULT_PRIME_INDEX && 4L * size() < primes[primeIndex])
+            if (primeIndex > 4 && 4L * size() < primes[primeIndex])
                 resize(this.primeIndex - 1);
         }
     }
