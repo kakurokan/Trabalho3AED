@@ -96,7 +96,6 @@ public class UAlshTable<Key, Value> {
         }
 
         table.printDebugStructure();
-        System.out.println("Deleteds: " + table.getDeletedNotRemoved());
     }
 
     protected String getRandomString() {
@@ -120,7 +119,6 @@ public class UAlshTable<Key, Value> {
         System.out.println("----------------------------------------------------------------");
 
         for (int i = 1; i <= 5; i++) {
-            @SuppressWarnings("unchecked")
             UAlshBucket<Key, Value>[] currentTable = (UAlshBucket<Key, Value>[]) getSubTable(i);
 
             int occupied = 0;
