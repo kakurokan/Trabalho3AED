@@ -103,10 +103,7 @@ public class Main {
         HashSet<String> keys = new HashSet<>();
         while (keys.size() < n)
             keys.add(getRandomString());
-        ArrayList<String> aleatorio = new ArrayList<>(keys);
-        Collections.shuffle(aleatorio);
-
-        return aleatorio;
+        return new ArrayList<>(keys);
     }
 
     public static void countCompareByInsertionUAshTable() {
@@ -125,7 +122,7 @@ public class Main {
         for (int i : numero_comp) {
             media += i;
         }
-        media /= (double) size;
+        media /= size;
         System.out.println("Número médio de comparações efetuadas: " + media);
     }
 
@@ -150,6 +147,7 @@ public class Main {
         }
 */
 
+        countCompareByInsertionUAshTable();
     }
 }
 
