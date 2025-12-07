@@ -1,6 +1,8 @@
 package aed.tables;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 class UAlshBucket<Key, Value> implements IUAlshBucket<Key, Value> {
@@ -57,6 +59,11 @@ public class UAlshTable<Key, Value> {
     //37, 17, 11, 7, e 5. Esta mudança não tem qualquer impacto significativo
     private static final int[] primes = {5, 7, 11, 17, 37, 79, 163, 331, 673, 1361, 2729, 5471, 10949, 21911, 43853, 87719, 175447, 350899, 701819, 1403641, 2807303, 5614657, 11229331, 22458671, 44917381, 89834777, 179669557};
     private final Function<Key, Integer> hc2;
+    //Contadores
+    public int nOfCompares; //incrementa antes de comparar as keys no findBuckets
+    public int nOfSearches;  //incrementa no inicio do findBuckets antes de verificar qualquer coisa
+    public int nOfPutCalls; //incrementa no inicio do put
+    //Variáveis
     private int primeIndex;
     private int size;
     private int deletedKeys;
@@ -66,6 +73,7 @@ public class UAlshTable<Key, Value> {
     private UAlshBucket<Key, Value>[] t3;
     private UAlshBucket<Key, Value>[] t4;
     private UAlshBucket<Key, Value>[] t5;
+
 
     public UAlshTable(Function<Key, Integer> hc2) {
         this(hc2, 4);
@@ -80,33 +88,10 @@ public class UAlshTable<Key, Value> {
         initTables(primeIndex);
     }
 
-    public static void main(String[] args) {
-        UAlshTable<String, Integer> table = new UAlshTable<>(String::hashCode);
-        ArrayList<String> keys = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) {
-            String r = table.getRandomString();
-            table.put(r, i);
-            keys.add(r);
-        }
-
-        for (int i = 0; i < keys.size(); i++) {
-            Random random = new Random();
-            int index = random.nextInt(keys.size());
-            table.delete(keys.get(index));
-        }
-
-        table.printDebugStructure();
-    }
-
-    protected String getRandomString() {
-        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!?$%&";
-        StringBuilder salt = new StringBuilder();
-        Random rnd = new Random();
-        while (salt.length() < 18) { // length of the random string.
-            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
-            salt.append(SALTCHARS.charAt(index));
-        }
-        return salt.toString();
+    public void resetCount() {
+        nOfSearches = 0;
+        nOfCompares = 0;
+        nOfPutCalls = 0;
     }
 
     public void printDebugStructure() {
@@ -246,6 +231,7 @@ public class UAlshTable<Key, Value> {
 
     private UAlshBucket<Key, Value> findBucket(Key k, int khc1, int khc2) {
         int z = Integer.MAX_VALUE;
+        nOfSearches++;
 
         for (int i = 1; i <= 5; i++) {
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(i, khc1, khc2)];
@@ -257,7 +243,10 @@ public class UAlshTable<Key, Value> {
         for (int i = z; i > 0; i--) {
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(i, khc1, khc2)];
             if (!bucket.isEmpty() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
-                if (bucket.getKey().equals(k)) return bucket;
+                if (bucket.getKey().equals(k)) {
+                    nOfCompares++;
+                    return bucket;
+                }
             }
         }
 
@@ -281,6 +270,7 @@ public class UAlshTable<Key, Value> {
             delete(k);
             return;
         }
+        nOfPutCalls++;
         int khc1 = k.hashCode();
         int khc2 = hc2.apply(k);
 

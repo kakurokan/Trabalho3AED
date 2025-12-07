@@ -1,10 +1,12 @@
 package aed;
 
+import aed.tables.UAlshTable;
 import aed.trees.UAlgTree;
 import aed.utils.TemporalAnalysisUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.function.Consumer;
 
@@ -78,6 +80,55 @@ public class Main {
         TemporalAnalysisUtils.runDoublingRatioTest(Main::createUalgTree, getPareto, 10); //Teste de razão dobrada com logica de Pareto
     }
 
+    public static String getRandomString() {
+        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!?$%&";
+        StringBuilder salt = new StringBuilder();
+        Random rnd = new Random();
+        while (salt.length() < 18) { // length of the random string.
+            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
+            salt.append(SALTCHARS.charAt(index));
+        }
+        return salt.toString();
+    }
+
+    public static int djb2HashString(String key) {
+        int hash = 5381;
+        for (int i = 0; i < key.length(); i++) {
+            hash = ((hash << 5) + hash) + key.charAt(i);
+        }
+        return hash & 0x7fffffff;
+    }
+
+    public static ArrayList<String> createRandomStringSet(int n) {
+        HashSet<String> keys = new HashSet<>();
+        while (keys.size() < n)
+            keys.add(getRandomString());
+        ArrayList<String> aleatorio = new ArrayList<>(keys);
+        Collections.shuffle(aleatorio);
+
+        return aleatorio;
+    }
+
+    public static void countCompareByInsertionUAshTable() {
+        UAlshTable<String, Integer> table = new UAlshTable<>(Main::djb2HashString);
+        int size = 10000;
+        ArrayList<String> keys = createRandomStringSet(size);
+        ArrayList<Integer> numero_comp = new ArrayList<>();
+
+        for (int i = 0; i < size; i++) {
+            table.put(keys.get(i), i);
+            numero_comp.add(table.nOfCompares);
+            table.resetCount();
+        }
+
+        double media = 0;
+        for (int i : numero_comp) {
+            media += i;
+        }
+        media /= (double) size;
+        System.out.println("Número médio de comparações efetuadas: " + media);
+    }
+
     public static void main(String[] args) {
 /*
         System.out.println("TESTE DE RACIO COM INSERÇÃO DE ELEMENTOS ALEATORIOS:");
@@ -99,7 +150,6 @@ public class Main {
         }
 */
 
-        testUAlgTreePareto();
     }
 }
 
