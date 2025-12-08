@@ -243,8 +243,8 @@ public class UAlshTable<Key, Value> {
         for (int i = z; i > 0; i--) {
             UAlshBucket<Key, Value> bucket = (UAlshBucket<Key, Value>) getSubTable(i)[UAsh(i, khc1, khc2)];
             if (!bucket.isEmpty() && bucket.hc1 == khc1 && bucket.hc2 == khc2) {
+                nOfCompares++;
                 if (bucket.getKey().equals(k)) {
-                    nOfCompares++;
                     return bucket;
                 }
             }
