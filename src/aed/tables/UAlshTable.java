@@ -94,62 +94,6 @@ public class UAlshTable<Key, Value> {
         nOfPutCalls = 0;
     }
 
-    public void printDebugStructure() {
-        System.out.println("\n################################################################");
-        System.out.println("###              ESTADO INTERNO DA UAlshTable                ###");
-        System.out.println("################################################################");
-        System.out.printf("Total Size (Ativos): %d | Deletados (Zombies): %d | Prime Index: %d%n",
-                this.size(), this.deletedKeys, this.primeIndex);
-        System.out.printf("Load Factor Global: %.2f%%%n", this.getLoadFactor() * 100);
-        System.out.println("----------------------------------------------------------------");
-
-        for (int i = 1; i <= 5; i++) {
-            UAlshBucket<Key, Value>[] currentTable = (UAlshBucket<Key, Value>[]) getSubTable(i);
-
-            int occupied = 0;
-            int zombies = 0;
-
-            // Pré-contagem para estatísticas da sub-tabela
-            for (UAlshBucket<Key, Value> b : currentTable) {
-                if (!b.isEmpty()) {
-                    if (b.isDeleted()) zombies++;
-                    else occupied++;
-                }
-            }
-
-            System.out.printf("\n>>> SUB-TABELA T%d [Capacidade: %d | Ocupados: %d | Zombies: %d]%n",
-                    i, currentTable.length, occupied, zombies);
-            System.out.println("    Index | Status   | Hash1      | Hash2      | Key                  | Value");
-            System.out.println("    ------+----------+------------+------------+----------------------+-------");
-
-            boolean emptyTable = true;
-            for (int j = 0; j < currentTable.length; j++) {
-                UAlshBucket<Key, Value> bucket = currentTable[j];
-
-                if (!bucket.isEmpty()) { // Só imprime se tiver algo (ativo ou deletado)
-                    emptyTable = false;
-                    String status = bucket.isDeleted() ? "[DEL]" : "[ OK]";
-
-                    // Formatação segura para chaves/valores nulos se deletados
-                    String keyStr = (bucket.getKey() == null) ? "null" : bucket.getKey().toString();
-                    String valStr = (bucket.getValue() == null) ? "null" : bucket.getValue().toString();
-
-                    // Trunca strings muito longas para não quebrar a tabela visualmente
-                    if (keyStr.length() > 20) keyStr = keyStr.substring(0, 17) + "...";
-                    if (valStr.length() > 10) valStr = valStr.substring(0, 7) + "...";
-
-                    System.out.printf("    %5d | %s | %10d | %10d | %-20s | %s%n",
-                            j, status, bucket.hc1, bucket.hc2, keyStr, valStr);
-                }
-            }
-
-            if (emptyTable) {
-                System.out.println("    (Tabela Vazia)");
-            }
-        }
-        System.out.println("\n################################################################\n");
-    }
-
     @SuppressWarnings("unchecked")
     private void initTables(int primeIndex) {
         this.t1 = (UAlshBucket<Key, Value>[]) new UAlshBucket[primes[primeIndex]];
